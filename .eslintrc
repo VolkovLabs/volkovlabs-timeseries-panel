@@ -10,7 +10,7 @@
   "rules": {
     "deprecation/deprecation": ["warn"],
     "sort-imports": [
-      "warn",
+      "error",
       {
         "ignoreCase": true,
         "ignoreDeclarationSort": true

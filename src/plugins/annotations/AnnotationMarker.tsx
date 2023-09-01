@@ -2,9 +2,9 @@ import { css } from '@emotion/css';
 import React, { HTMLAttributes, useCallback, useRef, useState } from 'react';
 import { usePopper } from 'react-popper';
 
-import { GrafanaTheme2, dateTimeFormat, systemDateFormats, TimeZone } from '@grafana/data';
+import { dateTimeFormat, GrafanaTheme2, systemDateFormats, TimeZone } from '@grafana/data';
 import { selectors } from '@grafana/e2e-selectors';
-import { Portal, useStyles2, usePanelContext } from '@grafana/ui';
+import { Portal, usePanelContext, useStyles2 } from '@grafana/ui';
 import { getTooltipContainerStyles } from '@grafana/ui/src/themes/mixins';
 
 import { getCommonAnnotationStyles } from '../styles';

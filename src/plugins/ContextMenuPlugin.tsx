@@ -6,10 +6,10 @@ import { CartesianCoords2D, DataFrame, getFieldDisplayName, InterpolateFunction,
 import {
   ContextMenu,
   GraphContextMenuHeader,
-  MenuItemProps,
-  MenuItemsGroup,
   MenuGroup,
   MenuItem,
+  MenuItemProps,
+  MenuItemsGroup,
   UPlotConfigBuilder,
 } from '@grafana/ui';
 

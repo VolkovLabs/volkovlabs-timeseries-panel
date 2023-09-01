@@ -1,24 +1,24 @@
 import {
+  Field,
   FieldColorModeId,
   FieldConfigProperty,
   FieldType,
   identityOverrideProcessor,
   SetFieldConfigOptionsArgs,
-  Field,
 } from '@grafana/data';
 import {
   BarAlignment,
   GraphDrawStyle,
   GraphFieldConfig,
   GraphGradientMode,
+  GraphTransform,
+  GraphTresholdsStyleMode,
   LineInterpolation,
   LineStyle,
-  VisibilityMode,
   StackingMode,
-  GraphTresholdsStyleMode,
-  GraphTransform,
+  VisibilityMode,
 } from '@grafana/schema';
-import { graphFieldOptions, commonOptionsBuilder } from '@grafana/ui';
+import { commonOptionsBuilder, graphFieldOptions } from '@grafana/ui';
 
 import { LineStyleEditor } from './LineStyleEditor';
 import { SpanNullsEditor } from './SpanNullsEditor';

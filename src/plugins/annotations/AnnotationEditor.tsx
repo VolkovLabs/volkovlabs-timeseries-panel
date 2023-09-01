@@ -3,7 +3,7 @@ import React, { HTMLAttributes, useState } from 'react';
 import { usePopper } from 'react-popper';
 
 import { colorManipulator, DataFrame, getDisplayProcessor, GrafanaTheme2, TimeZone } from '@grafana/data';
-import { PlotSelection, useStyles2, useTheme2, Portal, DEFAULT_ANNOTATION_COLOR } from '@grafana/ui';
+import { DEFAULT_ANNOTATION_COLOR, PlotSelection, Portal, useStyles2, useTheme2 } from '@grafana/ui';
 
 import { getCommonAnnotationStyles } from '../styles';
 import { AnnotationsDataFrameViewDTO } from '../types';

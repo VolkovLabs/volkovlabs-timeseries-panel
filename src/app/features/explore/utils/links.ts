@@ -2,20 +2,20 @@ import { uniqBy } from 'lodash';
 import { useCallback } from 'react';
 
 import {
-  Field,
-  LinkModel,
-  TimeRange,
-  mapInternalLinkToExplore,
-  InterpolateFunction,
-  ScopedVars,
-  DataFrame,
-  getFieldDisplayValuesProxy,
-  SplitOpen,
-  DataLink,
-  DisplayValue,
-  DataLinkConfigOrigin,
   CoreApp,
+  DataFrame,
+  DataLink,
+  DataLinkConfigOrigin,
+  DisplayValue,
+  Field,
+  getFieldDisplayValuesProxy,
+  InterpolateFunction,
+  LinkModel,
+  mapInternalLinkToExplore,
+  ScopedVars,
+  SplitOpen,
   SplitOpenOptions,
+  TimeRange,
 } from '@grafana/data';
 import { getTemplateSrv, reportInteraction, VariableInterpolation } from '@grafana/runtime';
 import { DataQuery } from '@grafana/schema';

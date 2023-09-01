@@ -1,8 +1,8 @@
 import {
-  FieldColorModeId,
-  VisualizationSuggestionsBuilder,
-  VisualizationSuggestion,
   DataTransformerID,
+  FieldColorModeId,
+  VisualizationSuggestion,
+  VisualizationSuggestionsBuilder,
 } from '@grafana/data';
 import { GraphDrawStyle, GraphFieldConfig, GraphGradientMode, LineInterpolation, StackingMode } from '@grafana/schema';
 import { SuggestionName } from 'app/types/suggestions';
