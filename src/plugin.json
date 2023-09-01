@@ -1,7 +1,7 @@
 {
   "type": "panel",
   "name": "Time series",
-  "id": "timeseries",
+  "id": "volkovlabs-timeseries-panel",
 
   "info": {
     "description": "Time based line, area and bar charts",

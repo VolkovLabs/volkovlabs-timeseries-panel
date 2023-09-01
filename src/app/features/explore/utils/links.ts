@@ -19,7 +19,7 @@ import {
 } from '@grafana/data';
 import { getTemplateSrv, reportInteraction, VariableInterpolation } from '@grafana/runtime';
 import { DataQuery } from '@grafana/schema';
-import { contextSrv } from 'app/core/services/context_srv';
+// import { contextSrv } from 'app/core/services/context_srv';
 import { getTransformationVars } from 'app/features/correlations/transformations';
 
 import { getLinkSrv } from '../../panel/panellinks/link_srv';
@@ -27,7 +27,8 @@ import { getLinkSrv } from '../../panel/panellinks/link_srv';
 type DataLinkFilter = (link: DataLink, scopedVars: ScopedVars) => boolean;
 
 const dataLinkHasRequiredPermissionsFilter = (link: DataLink) => {
-  return !link.internal || contextSrv.hasAccessToExplore();
+  return !link.internal;
+  // return !link.internal || contextSrv.hasAccessToExplore();
 };
 
 /**

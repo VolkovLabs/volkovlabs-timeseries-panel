@@ -12,7 +12,6 @@ import {
   MenuItem,
   UPlotConfigBuilder,
 } from '@grafana/ui';
-import { pluginLog } from '@grafana/ui/src/components/uPlot/utils';
 
 type ContextMenuSelectionCoords = { viewport: CartesianCoords2D; plotCanvas: CartesianCoords2D };
 type ContextMenuSelectionPoint = { seriesIdx: number | null; dataIdx: number | null };
@@ -54,7 +53,7 @@ export const ContextMenuPlugin = ({
   }, [setIsOpen]);
 
   const clearSelection = useCallback(() => {
-    pluginLog('ContextMenuPlugin', false, 'clearing click selection');
+    console.log('ContextMenuPlugin', false, 'clearing click selection');
     setPoint(null);
   }, [setPoint]);
 
@@ -95,7 +94,7 @@ export const ContextMenuPlugin = ({
       plotCanvas.current = canvas || undefined;
       plotCanvas.current?.addEventListener('mousedown', onMouseCapture);
 
-      pluginLog('ContextMenuPlugin', false, 'init');
+      console.log('ContextMenuPlugin', false, 'init');
       // for naive click&drag check
       let isClick = false;
 
@@ -121,7 +120,7 @@ export const ContextMenuPlugin = ({
 
         if (e.target instanceof HTMLElement) {
           if (!e.target.classList.contains('u-cursor-pt')) {
-            pluginLog('ContextMenuPlugin', false, 'canvas click');
+            console.log('ContextMenuPlugin', false, 'canvas click');
             setPoint({ seriesIdx: null, dataIdx: null });
           }
         }
@@ -135,7 +134,7 @@ export const ContextMenuPlugin = ({
           pt.addEventListener('click', () => {
             const seriesIdx = i + 1;
             const dataIdx = u.cursor.idx;
-            pluginLog('ContextMenuPlugin', false, seriesIdx, dataIdx);
+            console.log('ContextMenuPlugin', false, seriesIdx, dataIdx);
             setPoint({ seriesIdx, dataIdx: dataIdx ?? null });
           });
         });

@@ -10,7 +10,7 @@ import {
   SortedVector,
   TimeRange,
 } from '@grafana/data';
-import { convertFieldType } from '@grafana/data/src/transformations/transformers/convertFieldType';
+import { convertFieldType } from 'app/core/utils/convertFieldType';
 import { GraphFieldConfig, LineInterpolation } from '@grafana/schema';
 import { applyNullInsertThreshold } from '@grafana/ui/src/components/GraphNG/nullInsertThreshold';
 import { nullToValue } from '@grafana/ui/src/components/GraphNG/nullToValue';

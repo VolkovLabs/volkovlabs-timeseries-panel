@@ -16,7 +16,7 @@ import {
 import { selectors } from '@grafana/e2e-selectors';
 import { FieldLinkList, Portal, UPlotConfigBuilder, useStyles2 } from '@grafana/ui';
 
-import { ExemplarModalHeader } from '../../heatmap/ExemplarModalHeader';
+import { ExemplarModalHeader } from './ExemplarModalHeader';
 
 interface ExemplarMarkerProps {
   timeZone: TimeZone;

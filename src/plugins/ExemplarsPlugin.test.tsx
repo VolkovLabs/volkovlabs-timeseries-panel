@@ -1,5 +1,5 @@
-import { MutableDataFrame, Field } from '@grafana/data/src';
-import { UPlotConfigBuilder } from '@grafana/ui/src';
+import { MutableDataFrame, Field } from '@grafana/data';
+import { UPlotConfigBuilder } from '@grafana/ui';
 
 import { getVisibleLabels, VisibleExemplarLabels } from './ExemplarsPlugin';
 
