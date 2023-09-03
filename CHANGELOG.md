@@ -4,3 +4,4 @@
 
 - Based on the Abc Panel template 3.1.0
 - Add Time Series panel from 10.0.3 (#1)
+- Update README and Provisioning (#2)
