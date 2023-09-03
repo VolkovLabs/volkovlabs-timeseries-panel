@@ -12,6 +12,8 @@
     "logos": {
       "small": "img/icn-timeseries-panel.svg",
       "large": "img/icn-timeseries-panel.svg"
-    }
+    },
+    "updated": "%TODAY%",
+    "version": "%VERSION%"
   }
 }

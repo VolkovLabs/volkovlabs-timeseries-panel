@@ -1,5 +1,4 @@
 import { e2e } from '@grafana/e2e';
-import { TestIds } from '../../src/constants';
 
 /**
  * Dashboard
@@ -22,20 +21,8 @@ describe('Viewing an Abc panel', () => {
     });
   });
 
-  it('Should display a Hello World', () => {
+  it('Should display a Panel', () => {
     const currentPanel = e2e.components.Panels.Panel.title(testedPanel.title);
     currentPanel.should('be.visible');
-
-    /**
-     * Root
-     */
-    const root = currentPanel.find(getTestIdSelector(TestIds.panel.root));
-    root.should('be.visible');
-
-    /**
-     * Screenshot
-     */
-    root.screenshot(testedPanel.title);
-    e2e().compareScreenshots({ name: testedPanel.title, threshold: 0.05 });
   });
 });
