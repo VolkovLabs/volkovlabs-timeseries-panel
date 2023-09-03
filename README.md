@@ -1,4 +1,4 @@
-# Template to create a new Grafana panel plugin
+# Time Series panel for Grafana
 
 ![Dashboard](https://github.com/VolkovLabs/volkovlabs-abc-panel/raw/main/src/img/dashboard.png)
 
