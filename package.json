@@ -13,7 +13,7 @@
     "stream": "^0.0.2",
     "tslib": "^2.6.1"
   },
-  "description": "Template to create a new Grafana panel plugin",
+  "description": "Time Series panel for Grafana",
   "devDependencies": {
     "@babel/core": "^7.22.9",
     "@grafana/e2e": "^10.0.2",
@@ -56,7 +56,7 @@
     "node": ">=18"
   },
   "license": "Apache-2.0",
-  "name": "volkovlabs-abc-panel",
+  "name": "volkovlabs-timeseries-panel",
   "scripts": {
     "build": "webpack -c ./.config/webpack/webpack.config.ts --env production",
     "dev": "webpack -w -c ./.config/webpack/webpack.config.ts --env development",
@@ -72,5 +72,5 @@
     "test:ci": "jest --maxWorkers 4 --coverage",
     "upgrade": "npm upgrade --save"
   },
-  "version": "3.1.0"
+  "version": "1.0.0"
 }
