@@ -42,7 +42,8 @@ npm run start
 
 ## Highlights
 
-- Fork of the native Time Series panel from 10.0.3.
+- Based on the native Time Series panel from 10.0.3.
+- Allows to select a dashboard variable to automatically add to manual annotations.
 
 ## Support
 
