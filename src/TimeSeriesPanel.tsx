@@ -1,12 +1,10 @@
+import { config } from 'app/core/config';
+import { getFieldLinksForExplore } from 'app/features/explore/utils/links';
 import React, { useMemo } from 'react';
-
 import { DataFrameType, Field, PanelProps } from '@grafana/data';
 import { PanelDataErrorView } from '@grafana/runtime';
 import { TooltipDisplayMode } from '@grafana/schema';
 import { KeyboardPlugin, TimeSeries, TooltipPlugin, usePanelContext, ZoomPlugin } from '@grafana/ui';
-import { config } from 'app/core/config';
-import { getFieldLinksForExplore } from 'app/features/explore/utils/links';
-
 import { Options } from './panelcfg.gen';
 import { AnnotationEditorPlugin } from './plugins/AnnotationEditorPlugin';
 import { AnnotationsPlugin } from './plugins/AnnotationsPlugin';
@@ -104,7 +102,7 @@ export const TimeSeriesPanel = ({
             )}
             {/* Enables annotations creation*/}
             {enableAnnotationCreation ? (
-              <AnnotationEditorPlugin data={alignedDataFrame} timeZone={timeZone} config={config}>
+              <AnnotationEditorPlugin data={alignedDataFrame} timeZone={timeZone} config={config} options={options}>
                 {({ startAnnotating }) => {
                   return (
                     <ContextMenuPlugin

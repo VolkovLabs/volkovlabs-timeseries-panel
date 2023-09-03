@@ -1,32 +1,46 @@
+import { Options } from 'panelcfg.gen';
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { useMountedState } from 'react-use';
 import uPlot from 'uplot';
-
 import { CartesianCoords2D, DataFrame, TimeZone } from '@grafana/data';
+import { getTemplateSrv } from '@grafana/runtime';
 import { PlotSelection, UPlotConfigBuilder } from '@grafana/ui';
-
 import { AnnotationEditor } from './annotations/AnnotationEditor';
+import { AnnotationsDataFrameViewDTO } from './types';
 
 type StartAnnotatingFn = (props: {
   // pixel coordinates of the clicked point on the uPlot canvas
   coords: { viewport: CartesianCoords2D; plotCanvas: CartesianCoords2D } | null;
 }) => void;
 
+const getTagsFromVariables = (variableId: string) => {
+  const variables = getTemplateSrv().getVariables();
+  return variables.reduce((acc: string[], variable) => {
+    if ('options' in variable && variable.id === variableId) {
+      const selectedOptions = variable.options.filter((option) => option.selected);
+      return acc.concat(...selectedOptions.map((option) => option.text || ''));
+    }
+    return acc;
+  }, []);
+};
+
 interface AnnotationEditorPluginProps {
   data: DataFrame;
   timeZone: TimeZone;
   config: UPlotConfigBuilder;
   children?: (props: { startAnnotating: StartAnnotatingFn }) => React.ReactNode;
+  options: Options;
 }
 
 /**
  * @alpha
  */
-export const AnnotationEditorPlugin = ({ data, timeZone, config, children }: AnnotationEditorPluginProps) => {
+export const AnnotationEditorPlugin = ({ data, timeZone, config, children, options }: AnnotationEditorPluginProps) => {
   const plotInstance = useRef<uPlot>();
   const [bbox, setBbox] = useState<DOMRect>();
   const [isAddingAnnotation, setIsAddingAnnotation] = useState(false);
   const [selection, setSelection] = useState<PlotSelection | null>(null);
+  const [annotation, setAnnotation] = useState<Pick<AnnotationsDataFrameViewDTO, 'time' | 'timeEnd' | 'tags'>>();
   const isMounted = useMountedState();
 
   const clearSelection = useCallback(() => {
@@ -36,6 +50,7 @@ export const AnnotationEditorPlugin = ({ data, timeZone, config, children }: Ann
       plotInstance.current.setSelect({ top: 0, left: 0, width: 0, height: 0 });
     }
     setIsAddingAnnotation(false);
+    setAnnotation(undefined);
   }, [setIsAddingAnnotation, setSelection]);
 
   useLayoutEffect(() => {
@@ -70,15 +85,24 @@ export const AnnotationEditorPlugin = ({ data, timeZone, config, children }: Ann
     const setSelect = (u: uPlot) => {
       if (annotating) {
         setIsAddingAnnotation(true);
+        const min = u.posToVal(u.select.left, 'x');
+        const max = u.posToVal(u.select.left + u.select.width, 'x');
+
         setSelection({
-          min: u.posToVal(u.select.left, 'x'),
-          max: u.posToVal(u.select.left + u.select.width, 'x'),
+          min,
+          max,
           bbox: {
             left: u.select.left,
             top: 0,
             height: u.select.height,
             width: u.select.width,
           },
+        });
+
+        setAnnotation({
+          time: min,
+          timeEnd: max,
+          tags: getTagsFromVariables(options.variable),
         });
         annotating = false;
       }
@@ -105,7 +129,7 @@ export const AnnotationEditorPlugin = ({ data, timeZone, config, children }: Ann
         },
       },
     });
-  }, [config, setBbox, isMounted]);
+  }, [config, setBbox, isMounted, options.variable]);
 
   const startAnnotating = useCallback<StartAnnotatingFn>(
     ({ coords }) => {
@@ -129,15 +153,22 @@ export const AnnotationEditorPlugin = ({ data, timeZone, config, children }: Ann
           width: 0,
         },
       });
+
+      setAnnotation({
+        time: min,
+        timeEnd: min,
+        tags: getTagsFromVariables(options.variable),
+      });
       setIsAddingAnnotation(true);
     },
-    [bbox]
+    [bbox, options.variable]
   );
 
   return (
     <>
       {isAddingAnnotation && selection && bbox && (
         <AnnotationEditor
+          annotation={annotation as AnnotationsDataFrameViewDTO}
           selection={selection}
           onDismiss={clearSelection}
           onSave={clearSelection}
