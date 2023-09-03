@@ -7,7 +7,7 @@
 
 ## Introduction
 
-The Timeseries panel is a native Grafana panel.
+The Time Series panel is a native Grafana panel decoupled from the core.
 
 ## Requirements
 
