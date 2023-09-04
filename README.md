@@ -44,6 +44,7 @@ npm run start
 
 - Based on the native Time Series panel from 10.0.3.
 - Allows to select a dashboard variable to automatically add to manual annotations.
+- Allows to set custom scales using the datasource (Timescale) for viewers.
 
 ## Support
 
