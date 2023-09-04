@@ -5,6 +5,7 @@
 ### Features / Enhancements
 
 - Add selected variable to add annotation form (#3)
+- Add custom scales editor form (#4)
 
 ## 1.0.0 (2023-09-03)
 
