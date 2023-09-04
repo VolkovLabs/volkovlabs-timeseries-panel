@@ -133,6 +133,20 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
       if (!timescalesFrame) {
         return null;
       }
+
+      /**
+       * Set Display Names
+       */
+      timescalesFrame.fields.forEach((field) => {
+        if (field.name === 'metric') {
+          field.config.displayName = 'Scale';
+        } else if (field.name === 'min') {
+          field.config.displayName = 'Minimum';
+        } else if (field.name === 'max') {
+          field.config.displayName = 'Maximum';
+        }
+      });
+
       const fields = timescalesFrame.fields.map((field) => ({
         ...field,
         display: getDisplayProcessor({
@@ -159,10 +173,11 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
       >
         <div className={styles.header}>
           <HorizontalGroup justify={'space-between'} align={'center'}>
-            <div className={styles.title}>Custom scales</div>
+            <div className={styles.title}>Set Custom scales</div>
           </HorizontalGroup>
         </div>
         {tableData && <Table data={tableData} width={size.width} height={size.height} />}
+        <hr />
         <div className={styles.editorForm}>
           <form
             onSubmit={(e) => {
@@ -170,7 +185,20 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
               onSubmit(formData);
             }}
           >
-            <Field label={'Min'}>
+            <Field label={'Scale'}>
+              <Select
+                value={formData.scale}
+                options={scales.map((value: string) => ({ value, label: value }))}
+                onChange={(value: any) => {
+                  setFormData({
+                    ...formData,
+                    ...getTimescaleData(timescalesFrame, value.value),
+                    scale: value.value,
+                  });
+                }}
+              />
+            </Field>
+            <Field label={'Minimum'}>
               <NumberInput
                 value={formData.min}
                 min={0}
@@ -182,7 +210,7 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
                 }}
               />
             </Field>
-            <Field label={'Max'}>
+            <Field label={'Maximum'}>
               <NumberInput
                 value={formData.max}
                 min={0}
@@ -190,19 +218,6 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
                   setFormData({
                     ...formData,
                     max: value || 0,
-                  });
-                }}
-              />
-            </Field>
-            <Field label={'Scale'}>
-              <Select
-                value={formData.scale}
-                options={scales.map((value: string) => ({ value, label: value }))}
-                onChange={(value: any) => {
-                  setFormData({
-                    ...formData,
-                    ...getTimescaleData(timescalesFrame, value.value),
-                    scale: value.value,
                   });
                 }}
               />
