@@ -1,7 +1,7 @@
 import { config } from 'app/core/config';
 import { getFieldLinksForExplore } from 'app/features/explore/utils/links';
 import React, { useCallback, useMemo, useState } from 'react';
-import { CartesianCoords2D, DataFrameType, Field, PanelProps } from '@grafana/data';
+import { CartesianCoords2D, DataFrame, DataFrameType, Field, PanelProps, toDataFrame } from '@grafana/data';
 import { getBackendSrv, PanelDataErrorView } from '@grafana/runtime';
 import { TooltipDisplayMode } from '@grafana/schema';
 import { KeyboardPlugin, MenuItemProps, TimeSeries, TooltipPlugin, usePanelContext, ZoomPlugin } from '@grafana/ui';
@@ -47,6 +47,8 @@ export const TimeSeriesPanel = ({
   const frames = useMemo(() => prepareGraphableFields(data.series, config.theme2, timeRange), [data.series, timeRange]);
   const timezones = useMemo(() => getTimezones(options.timezone, timeZone), [options.timezone, timeZone]);
 
+  const [timescalesFrame, setTimescalesFrame] = useState<DataFrame | null>(null);
+
   const mappings = fieldConfig.defaults.mappings;
   let scales: string[] = [];
 
@@ -61,6 +63,41 @@ export const TimeSeriesPanel = ({
         });
       });
   }
+
+  const getTimescales = useCallback(async () => {
+    const user = config.bootData.user;
+    const userId = user?.id;
+    const rawSql = `select last(min, time) as min, last(max, time) as max, metric from scales where user_id='${userId}' group by metric;`;
+    const target = data.request?.targets[0];
+    const datasourceId = target?.datasource?.uid;
+    const refId = target?.refId;
+
+    if (refId) {
+      const response = await getBackendSrv().post('/api/ds/query', {
+        debug: true,
+        from: 'now-1h',
+        publicDashboardAccessToken: 'string',
+        queries: [
+          {
+            datasource: {
+              uid: datasourceId,
+            },
+            format: 'table',
+            intervalMs: 86400000,
+            maxDataPoints: 1092,
+            rawSql,
+            refId,
+          },
+        ],
+        to: 'now',
+      });
+
+      setTimescalesFrame(toDataFrame(response.results?.[refId]?.frames[0]));
+      return;
+    }
+
+    setTimescalesFrame(null);
+  }, [data.request?.targets]);
 
   const onAddTimescale = useCallback(
     async (formData: TimescaleEditFormDTO) => {
@@ -148,6 +185,7 @@ export const TimeSeriesPanel = ({
                 onClick: (e, p) => {
                   setTimescaleTriggerCoords(p.coords);
                   setAddingTimescale(true);
+                  getTimescales();
                 },
               },
             ]
@@ -228,6 +266,7 @@ export const TimeSeriesPanel = ({
                   left: timescaleTriggerCoords?.viewport?.x,
                   top: timescaleTriggerCoords?.viewport?.y,
                 }}
+                timescalesFrame={timescalesFrame}
               />
             )}
             {data.annotations && (
