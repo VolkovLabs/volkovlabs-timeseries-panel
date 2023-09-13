@@ -44,7 +44,10 @@ export const TimeSeriesPanel = ({
     plotCanvas: CartesianCoords2D;
   } | null>(null);
 
-  const frames = useMemo(() => prepareGraphableFields(data.series, config.theme2, timeRange), [data.series, timeRange]);
+  const frames = useMemo(
+    () => prepareGraphableFields(data.series, config.theme2, timeRange, undefined, fieldConfig),
+    [data.series, fieldConfig, timeRange]
+  );
   const timezones = useMemo(() => getTimezones(options.timezone, timeZone), [options.timezone, timeZone]);
 
   const [timescalesFrame, setTimescalesFrame] = useState<DataFrame | null>(null);

@@ -1,6 +1,7 @@
 import {
   DataFrame,
   Field,
+  FieldConfigSource,
   FieldType,
   getDisplayProcessor,
   getLinksSupplier,
@@ -8,6 +9,8 @@ import {
   InterpolateFunction,
   isBooleanUnit,
   SortedVector,
+  sortThresholds,
+  ThresholdsConfig,
   TimeRange,
 } from '@grafana/data';
 import { convertFieldType } from 'app/core/utils/convertFieldType';
@@ -23,7 +26,8 @@ export function prepareGraphableFields(
   theme: GrafanaTheme2,
   timeRange?: TimeRange,
   // numeric X requires a single frame where the first field is numeric
-  xNumFieldIdx?: number
+  xNumFieldIdx?: number,
+  fieldConfig?: FieldConfigSource
 ): DataFrame[] | null {
   if (!series?.length) {
     return null;
@@ -75,6 +79,38 @@ export function prepareGraphableFields(
     for (let fieldIdx = 0; fieldIdx < frameFields?.length ?? 0; fieldIdx++) {
       const field = frameFields[fieldIdx];
 
+      let thresholds: ThresholdsConfig | undefined = undefined;
+
+      if (field.config.thresholds) {
+        thresholds = {
+          mode: field.config.thresholds.mode,
+          steps: [],
+        };
+
+        const fieldOverrides =
+          fieldConfig?.overrides.filter((override) => {
+            return override.matcher.id === 'byName' && override.matcher.options === field.name;
+          }) || [];
+
+        if (fieldOverrides.length >= 2) {
+          /**
+           * Multiple Overrides
+           */
+          const allSteps = fieldOverrides.reduce((acc, item) => {
+            const thresholdProperty = item.properties.find((property) => property.id === 'thresholds');
+
+            if (thresholdProperty) {
+              return acc.concat(thresholdProperty.value.steps);
+            }
+            return acc;
+          }, []);
+
+          thresholds.steps = sortThresholds(allSteps);
+        } else {
+          thresholds = field.config.thresholds;
+        }
+      }
+
       switch (field.type) {
         case FieldType.time:
           hasTimeField = true;
@@ -84,6 +120,10 @@ export function prepareGraphableFields(
           hasValueField = useNumericX ? fieldIdx > 0 : true;
           copy = {
             ...field,
+            config: {
+              ...field.config,
+              thresholds,
+            },
             values: field.values.map((v) => {
               if (!(Number.isFinite(v) || v == null)) {
                 return null;
@@ -97,6 +137,10 @@ export function prepareGraphableFields(
         case FieldType.string:
           copy = {
             ...field,
+            config: {
+              ...field.config,
+              thresholds,
+            },
             values: field.values,
           };
 
@@ -110,6 +154,7 @@ export function prepareGraphableFields(
             max: 1,
             min: 0,
             custom,
+            thresholds,
           };
 
           // smooth and linear do not make sense
