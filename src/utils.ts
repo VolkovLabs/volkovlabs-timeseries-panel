@@ -84,6 +84,10 @@ export function prepareGraphableFields(
           hasValueField = useNumericX ? fieldIdx > 0 : true;
           copy = {
             ...field,
+            config: {
+              ...field.config,
+              unit: field.config.unit || new Array(fieldIdx).join(' '),
+            },
             values: field.values.map((v) => {
               if (!(Number.isFinite(v) || v == null)) {
                 return null;
@@ -97,6 +101,10 @@ export function prepareGraphableFields(
         case FieldType.string:
           copy = {
             ...field,
+            config: {
+              ...field.config,
+              unit: field.config.unit || new Array(fieldIdx).join(' '),
+            },
             values: field.values,
           };
 
@@ -110,6 +118,7 @@ export function prepareGraphableFields(
             max: 1,
             min: 0,
             custom,
+            unit: field.config.unit || new Array(fieldIdx).join(' '),
           };
 
           // smooth and linear do not make sense
