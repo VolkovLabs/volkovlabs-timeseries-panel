@@ -88,7 +88,7 @@ export function prepareGraphableFields(
               ...field.config,
               custom: {
                 ...field.config.custom,
-                axisLabel: field.config.custom.axisLabel || field.name,
+                axisLabel: field.config.custom?.axisLabel || field.name,
               },
             },
             values: field.values.map((v) => {
@@ -108,7 +108,7 @@ export function prepareGraphableFields(
               ...field.config,
               custom: {
                 ...field.config.custom,
-                axisLabel: field.config.custom.axisLabel || field.name,
+                axisLabel: field.config.custom?.axisLabel || field.name,
               },
             },
             values: field.values,
