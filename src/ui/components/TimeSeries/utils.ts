@@ -498,21 +498,43 @@ export const preparePlotConfigBuilder: UPlotConfigPrepFn<{
       // The following properties are not used in the uPlot config, but are utilized as transport for legend config
       dataFrameFieldIndex: field.state?.origin,
     });
+  }
 
-    // Render thresholds in graph
-    if (customConfig.thresholdsStyle && config.thresholds) {
-      const thresholdDisplay = customConfig.thresholdsStyle.mode ?? GraphTresholdsStyleMode.Off;
-      if (thresholdDisplay !== GraphTresholdsStyleMode.Off) {
-        builder.addThresholds({
-          config: customConfig.thresholdsStyle,
-          thresholds: config.thresholds,
-          scaleKey,
-          theme,
-          hardMin: field.config.min,
-          hardMax: field.config.max,
-          softMin: customConfig.axisSoftMin,
-          softMax: customConfig.axisSoftMax,
-        });
+  const activeSeriesList = builder.series.filter((item) => item.props.show);
+  const activeSeries = activeSeriesList[0];
+
+  /**
+   * Show thresholds when single series active
+   */
+  if (activeSeriesList.length === 1 && activeSeries) {
+    const field = frame.fields[activeSeries.props.dataFrameFieldIndex?.fieldIndex || 0];
+    if (field) {
+      const config: FieldConfig<GraphFieldConfig> = {
+        ...field.config,
+        custom: {
+          ...defaultConfig,
+          ...field.config.custom,
+        },
+      };
+      const customConfig: GraphFieldConfig = config.custom!;
+
+      // Render thresholds in graph
+      if (customConfig.thresholdsStyle && config.thresholds) {
+        const thresholdDisplay = customConfig.thresholdsStyle.mode ?? GraphTresholdsStyleMode.Off;
+        if (thresholdDisplay !== GraphTresholdsStyleMode.Off) {
+          const scaleKey = buildScaleKey(config);
+
+          builder.addThresholds({
+            config: customConfig.thresholdsStyle,
+            thresholds: config.thresholds,
+            scaleKey: scaleKey,
+            theme,
+            hardMin: field.config.min,
+            hardMax: field.config.max,
+            softMin: customConfig.axisSoftMin,
+            softMax: customConfig.axisSoftMax,
+          });
+        }
       }
     }
   }

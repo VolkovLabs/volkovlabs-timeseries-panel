@@ -397,7 +397,7 @@ function hasNegSample(data: unknown[], samples = 100) {
 // Dev helpers
 
 /** @internal */
-export const pluginLog = console.log;
+export const pluginLog = (...args: any[]) => {};
 // export const pluginLogger = createLogger('uPlot');
 // export const pluginLog = pluginLogger.logger;
 // // pluginLogger.enable();
