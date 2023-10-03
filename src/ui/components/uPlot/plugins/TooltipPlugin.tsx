@@ -63,7 +63,7 @@ export const TooltipPlugin = ({
   // Debug logs
   useEffect(() => {
     pluginLog(pluginId, true, `Focused series: ${focusedSeriesIdx}, focused point: ${focusedPointIdx}`);
-  }, [focusedPointIdx, focusedSeriesIdx]);
+  }, [focusedPointIdx, focusedSeriesIdx, pluginId]);
 
   // Add uPlot hooks to the config, or re-add when the config changed
   useLayoutEffect(() => {
@@ -169,7 +169,7 @@ export const TooltipPlugin = ({
         plotInstance.current.root.parentElement?.removeEventListener('blur', plotLeave);
       }
     };
-  }, [config, setCoords, setIsActive, setFocusedPointIdx, setFocusedPointIdxs]);
+  }, [config, setCoords, setIsActive, setFocusedPointIdx, setFocusedPointIdxs, isMounted, sync]);
 
   if (focusedPointIdx === null || (!isActive && sync && sync() === DashboardCursorSync.Crosshair)) {
     return null;
