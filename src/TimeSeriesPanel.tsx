@@ -172,6 +172,7 @@ export const TimeSeriesPanel = ({
       options={options}
     >
       {(config, alignedDataFrame) => {
+        console.log(alignedDataFrame);
         if (alignedDataFrame.fields.some((f) => Boolean(f.config.links?.length))) {
           alignedDataFrame = regenerateLinksSupplier(alignedDataFrame, frames, replaceVariables, timeZone);
         }
