@@ -3,12 +3,20 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": { "type": "datasource", "uid": "grafana" },
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
-        "target": { "limit": 100, "matchAny": false, "tags": [], "type": "dashboard" },
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
       }
     ]
@@ -21,20 +29,34 @@
   "liveNow": false,
   "panels": [
     {
-      "datasource": { "type": "datasource", "uid": "grafana" },
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "fieldConfig": {
         "defaults": {
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 80 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
             ]
           }
         },
         "overrides": []
       },
-      "gridPos": { "h": 18, "w": 4, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 18,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
       "id": 7,
       "options": {
         "autoScroll": false,
@@ -53,10 +75,15 @@
       "type": "volkovlabs-variable-panel"
     },
     {
-      "datasource": { "type": "postgres", "uid": "timescale" },
+      "datasource": {
+        "type": "postgres",
+        "uid": "timescale"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "text",
@@ -66,86 +93,169 @@
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
-            "scaleDistribution": { "type": "linear" },
+            "scaleDistribution": {
+              "type": "linear"
+            },
             "showPoints": "auto",
             "spanNulls": false,
-            "stacking": { "group": "A", "mode": "none" },
-            "thresholdsStyle": { "mode": "off" }
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [
             {
               "options": {
-                "scale1": { "index": 0, "text": "Temperature" },
-                "scale2": { "index": 1, "text": "Frequency" }
+                "scale1": {
+                  "index": 0,
+                  "text": "Temperature"
+                },
+                "scale2": {
+                  "index": 1,
+                  "text": "Frequency"
+                }
               },
               "type": "value"
             }
           ],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "temperature" },
+            "matcher": {
+              "id": "byName",
+              "options": "temperature"
+            },
             "properties": [
               {
                 "id": "thresholds",
                 "value": {
                   "mode": "absolute",
                   "steps": [
-                    { "color": "green", "value": null },
-                    { "color": "red", "value": 20 }
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 20
+                    }
                   ]
                 }
               },
-              { "id": "unit", "value": "celsius" },
-              { "id": "custom.thresholdsStyle", "value": { "mode": "area" } }
+              {
+                "id": "custom.thresholdsStyle",
+                "value": {
+                  "mode": "area"
+                }
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "frequency" },
+            "matcher": {
+              "id": "byName",
+              "options": "frequency"
+            },
             "properties": [
               {
                 "id": "thresholds",
                 "value": {
                   "mode": "absolute",
                   "steps": [
-                    { "color": "green", "value": null },
-                    { "color": "red", "value": 110 }
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 110
+                    }
                   ]
                 }
               },
-              { "id": "custom.thresholdsStyle", "value": { "mode": "area" } }
+              {
+                "id": "custom.thresholdsStyle",
+                "value": {
+                  "mode": "area"
+                }
+              }
             ]
           }
         ]
       },
-      "gridPos": { "h": 18, "w": 20, "x": 4, "y": 0 },
+      "gridPos": {
+        "h": 18,
+        "w": 20,
+        "x": 4,
+        "y": 0
+      },
       "id": 6,
       "options": {
-        "legend": { "calcs": [], "displayMode": "table", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" },
+        "legend": {
+          "calcs": [],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
         "variable": "device"
       },
       "targets": [
         {
-          "datasource": { "type": "postgres", "uid": "timescale" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "timescale"
+          },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
           "rawSql": "SELECT\n  t1.time,\n  Temperature,\n  frequency\nfrom\n  (\n    select\n      time_bucket('10 seconds', time) AS time,\n      avg(value) as Temperature\n    from\n      metrics\n    where\n      name = '$device'\n    group by\n      time\n  ) t1 full\n  join (\n    select\n      time_bucket('10 seconds', time) AS time,\n      avg(value) as frequency\n    from\n      metrics2\n    where\n      name = '$device'\n    group by\n      time\n  ) t2 ON t1.time = t2.time",
           "refId": "A",
           "sql": {
-            "columns": [{ "parameters": [], "type": "function" }],
-            "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }],
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
             "limit": 50
           }
         },
         {
-          "datasource": { "type": "postgres", "uid": "timescale" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "timescale"
+          },
           "editorMode": "code",
           "format": "table",
           "hide": false,
@@ -153,13 +263,28 @@
           "rawSql": "select min, max from scales where metric='Temperature' order by time desc limit 1;",
           "refId": "B",
           "sql": {
-            "columns": [{ "parameters": [], "type": "function" }],
-            "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }],
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
             "limit": 50
           }
         },
         {
-          "datasource": { "type": "postgres", "uid": "timescale" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "timescale"
+          },
           "editorMode": "code",
           "format": "table",
           "hide": true,
@@ -167,8 +292,20 @@
           "rawSql": "select time, value as frequency from metrics2 where name ='$device';",
           "refId": "C",
           "sql": {
-            "columns": [{ "parameters": [], "type": "function" }],
-            "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }],
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
             "limit": 50
           }
         }
@@ -179,11 +316,20 @@
           "disabled": true,
           "id": "configFromData",
           "options": {
-            "applyTo": { "id": "byName", "options": "value" },
+            "applyTo": {
+              "id": "byName",
+              "options": "value"
+            },
             "configRefId": "B",
             "mappings": [
-              { "fieldName": "min", "handlerKey": "min" },
-              { "fieldName": "max", "handlerKey": "max" }
+              {
+                "fieldName": "min",
+                "handlerKey": "min"
+              },
+              {
+                "fieldName": "max",
+                "handlerKey": "max"
+              }
             ]
           }
         }
@@ -191,41 +337,83 @@
       "type": "volkovlabs-timeseries-panel"
     },
     {
-      "datasource": { "type": "postgres", "uid": "timescale" },
+      "datasource": {
+        "type": "postgres",
+        "uid": "timescale"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false },
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 80 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
             ]
           }
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 20, "x": 4, "y": 18 },
+      "gridPos": {
+        "h": 8,
+        "w": 20,
+        "x": 4,
+        "y": 18
+      },
       "id": 8,
       "options": {
         "cellHeight": "sm",
-        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
         "showHeader": true
       },
       "pluginVersion": "10.0.3",
       "targets": [
         {
-          "datasource": { "type": "postgres", "uid": "timescale" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "timescale"
+          },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
           "rawSql": "select * from scales;",
           "refId": "A",
           "sql": {
-            "columns": [{ "parameters": [], "type": "function" }],
-            "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }],
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
             "limit": 50
           }
         }
@@ -234,15 +422,22 @@
       "type": "table"
     }
   ],
-  "refresh": "",
+  "refresh": false,
   "schemaVersion": 38,
   "style": "dark",
   "tags": [],
   "templating": {
     "list": [
       {
-        "current": { "selected": false, "text": "device1", "value": "device1" },
-        "datasource": { "type": "postgres", "uid": "timescale" },
+        "current": {
+          "selected": false,
+          "text": "device1",
+          "value": "device1"
+        },
+        "datasource": {
+          "type": "postgres",
+          "uid": "timescale"
+        },
         "definition": "select distinct name from metrics;",
         "hide": 0,
         "includeAll": false,
@@ -258,18 +453,31 @@
         "type": "query"
       },
       {
-        "current": { "selected": false, "text": "test", "value": "test" },
+        "current": {
+          "selected": false,
+          "text": "test",
+          "value": "test"
+        },
         "hide": 0,
         "label": "Test",
         "name": "test",
-        "options": [{ "selected": true, "text": "test", "value": "test" }],
+        "options": [
+          {
+            "selected": true,
+            "text": "test",
+            "value": "test"
+          }
+        ],
         "query": "test",
         "skipUrlSync": false,
         "type": "textbox"
       }
     ]
   },
-  "time": { "from": "2023-09-06T01:54:52.347Z", "to": "2023-09-06T01:56:15.058Z" },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "",
   "title": "Thresholds",
