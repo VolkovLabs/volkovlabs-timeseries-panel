@@ -26,7 +26,7 @@ export const ZoomPlugin = ({ onZoom, config }: ZoomPluginProps) => {
       }
       onZoom({ from: selection.min, to: selection.max });
     }
-  }, [selection]);
+  }, [onZoom, selection]);
 
   useLayoutEffect(() => {
     config.addHook('setSelect', (u) => {

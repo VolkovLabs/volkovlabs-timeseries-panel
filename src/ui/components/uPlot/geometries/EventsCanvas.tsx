@@ -24,6 +24,7 @@ export function EventsCanvas({ id, events, renderEventMarker, mapEventToXYCoords
   const plotInstance = useRef<uPlot>();
   // render token required to re-render annotation markers. Rendering lines happens in uPlot and the props do not change
   // so we need to force the re-render when the draw hook was performed by uPlot
+  // @ts-ignore
   const [renderToken, setRenderToken] = useState(0);
   const isMounted = useMountedState();
 
@@ -38,7 +39,7 @@ export function EventsCanvas({ id, events, renderEventMarker, mapEventToXYCoords
       }
       setRenderToken((s) => s + 1);
     });
-  }, [config, setRenderToken]);
+  }, [config, isMounted, setRenderToken]);
 
   const eventMarkers = useMemo(() => {
     const markers: React.ReactNode[] = [];
@@ -63,7 +64,7 @@ export function EventsCanvas({ id, events, renderEventMarker, mapEventToXYCoords
     }
 
     return <>{markers}</>;
-  }, [events, renderEventMarker, renderToken]);
+  }, [events, id, mapEventToXYCoords, renderEventMarker]);
 
   if (!plotInstance.current) {
     return null;
