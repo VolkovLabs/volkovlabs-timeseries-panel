@@ -143,7 +143,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "temperature"
+              "options": "frequency1"
             },
             "properties": [
               {
@@ -173,7 +173,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "frequency"
+              "options": "frequency2"
             },
             "properties": [
               {
@@ -231,66 +231,8 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  t1.time,\n  Temperature,\n  frequency\nfrom\n  (\n    select\n      time_bucket('10 seconds', time) AS time,\n      avg(value) as Temperature\n    from\n      metrics\n    where\n      name = '$device'\n    group by\n      time\n  ) t1 full\n  join (\n    select\n      time_bucket('10 seconds', time) AS time,\n      avg(value) as frequency\n    from\n      metrics2\n    where\n      name = '$device'\n    group by\n      time\n  ) t2 ON t1.time = t2.time",
+          "rawSql": "SELECT\n  t1.time,\n  frequency1,\n  frequency2\nfrom\n  (\n    select\n      time_bucket('10 seconds', time) AS time,\n      avg(value) as frequency1\n    from\n      metrics\n    where\n      name = '$device'\n    group by\n      time\n  ) t1 full\n  join (\n    select\n      time_bucket('10 seconds', time) AS time,\n      avg(value) as frequency2\n    from\n      metrics2\n    where\n      name = '$device'\n    group by\n      time\n  ) t2 ON t1.time = t2.time",
           "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        },
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "timescale"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "hide": false,
-          "rawQuery": true,
-          "rawSql": "select min, max from scales where metric='Temperature' order by time desc limit 1;",
-          "refId": "B",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        },
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "timescale"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "hide": true,
-          "rawQuery": true,
-          "rawSql": "select time, value as frequency from metrics2 where name ='$device';",
-          "refId": "C",
           "sql": {
             "columns": [
               {
@@ -482,6 +424,6 @@
   "timezone": "",
   "title": "Thresholds",
   "uid": "f68522c0-7023-47b0-8c6b-0d176e4ad533",
-  "version": 1,
+  "version": 3,
   "weekStart": ""
 }
