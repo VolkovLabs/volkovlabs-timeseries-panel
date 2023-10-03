@@ -12,8 +12,8 @@ import {
 } from '@grafana/data';
 import { convertFieldType } from 'app/core/utils/convertFieldType';
 import { GraphFieldConfig, LineInterpolation } from '@grafana/schema';
-import { applyNullInsertThreshold } from '@grafana/ui/src/components/GraphNG/nullInsertThreshold';
-import { nullToValue } from '@grafana/ui/src/components/GraphNG/nullToValue';
+import { applyNullInsertThreshold } from 'ui/components/GraphNG/nullInsertThreshold';
+import { nullToValue } from 'ui/components/GraphNG/nullToValue';
 
 /**
  * Returns null if there are no graphable fields

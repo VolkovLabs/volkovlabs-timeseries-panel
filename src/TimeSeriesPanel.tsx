@@ -4,7 +4,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { CartesianCoords2D, DataFrame, DataFrameType, Field, PanelProps, toDataFrame } from '@grafana/data';
 import { getBackendSrv, PanelDataErrorView } from '@grafana/runtime';
 import { TooltipDisplayMode } from '@grafana/schema';
-import { KeyboardPlugin, MenuItemProps, TimeSeries, TooltipPlugin, usePanelContext, ZoomPlugin } from '@grafana/ui';
+import { KeyboardPlugin, MenuItemProps, TooltipPlugin, usePanelContext, ZoomPlugin } from '@grafana/ui';
 import { Options } from './panelcfg.gen';
 import { AnnotationEditorPlugin } from './plugins/AnnotationEditorPlugin';
 import { AnnotationsPlugin } from './plugins/AnnotationsPlugin';
@@ -16,6 +16,7 @@ import { TimescaleEditor } from './plugins/timescales/TimescaleEditor';
 import { TimescaleEditFormDTO } from './plugins/timescales/TimescaleEditorForm';
 import { getPrepareTimeseriesSuggestion } from './suggestions';
 import { getTimezones, prepareGraphableFields, regenerateLinksSupplier } from './utils';
+import { TimeSeries } from './ui';
 
 interface TimeSeriesPanelProps extends PanelProps<Options> {}
 
@@ -171,8 +172,7 @@ export const TimeSeriesPanel = ({
       legend={options.legend}
       options={options}
     >
-      {(config, alignedDataFrame) => {
-        console.log(alignedDataFrame);
+      {(config: any, alignedDataFrame) => {
         if (alignedDataFrame.fields.some((f) => Boolean(f.config.links?.length))) {
           alignedDataFrame = regenerateLinksSupplier(alignedDataFrame, frames, replaceVariables, timeZone);
         }

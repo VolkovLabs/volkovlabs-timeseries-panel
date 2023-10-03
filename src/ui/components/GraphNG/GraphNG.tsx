@@ -250,8 +250,6 @@ export class GraphNG extends Component<GraphNGProps, GraphNGState> {
     const { width, height, children, timeRange, renderLegend } = this.props;
     const { config, alignedFrame, alignedData } = this.state;
 
-    console.log('graphng');
-
     if (!config) {
       return null;
     }

@@ -5,7 +5,7 @@ import { usePopper } from 'react-popper';
 import { dateTimeFormat, GrafanaTheme2, systemDateFormats, TimeZone } from '@grafana/data';
 import { selectors } from '@grafana/e2e-selectors';
 import { Portal, usePanelContext, useStyles2 } from '@grafana/ui';
-import { getTooltipContainerStyles } from '@grafana/ui/src/themes/mixins';
+import { getTooltipContainerStyles } from 'ui/themes/mixins';
 
 import { getCommonAnnotationStyles } from '../styles';
 import { AnnotationsDataFrameViewDTO } from '../types';
