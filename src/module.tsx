@@ -34,7 +34,7 @@ export const plugin = new PanelPlugin<Options, FieldConfig>(TimeSeriesPanel)
     builder
       .addRadio({
         path: 'allowViewerAnnotation',
-        name: 'Allow to add annotations for viewers',
+        name: 'Allow to add annotations to Viewers',
         category: ['Annotations'],
         settings: {
           options: [
