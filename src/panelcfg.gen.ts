@@ -14,6 +14,7 @@ export interface Options extends common.OptionsWithTimezones {
   legend: common.VizLegendOptions;
   tooltip: common.VizTooltipOptions;
   variable: string;
+  allowViewerAnnotation: boolean;
 }
 
 export interface FieldConfig extends common.GraphFieldConfig {}

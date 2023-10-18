@@ -31,14 +31,27 @@ export const plugin = new PanelPlugin<Options, FieldConfig>(TimeSeriesPanel)
       value: vr.name,
     }));
 
-    builder.addSelect({
-      path: 'variable',
-      name: 'Select variable for Annotations',
-      settings: {
-        options: variableOptions,
-      },
-      category: ['Annotations'],
-    });
+    builder
+      .addRadio({
+        path: 'allowViewerAnnotation',
+        name: 'Allow to add annotations to Viewers',
+        category: ['Annotations'],
+        settings: {
+          options: [
+            { label: 'Enabled', value: true },
+            { label: 'Disabled', value: false },
+          ],
+        },
+        defaultValue: true,
+      })
+      .addSelect({
+        path: 'variable',
+        name: 'Select variable for Annotations',
+        settings: {
+          options: variableOptions,
+        },
+        category: ['Annotations'],
+      });
   })
   .setSuggestionsSupplier(new TimeSeriesSuggestionsSupplier())
   .setDataSupport({ annotations: true, alertStates: true });
