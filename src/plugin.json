@@ -1,17 +1,16 @@
 {
   "type": "panel",
-  "name": "Time series",
+  "name": "Time series (Volkov Labs)",
   "id": "volkovlabs-timeseries-panel",
-
   "info": {
     "description": "Time based line, area and bar charts",
     "author": {
-      "name": "Grafana Labs",
-      "url": "https://grafana.com"
+      "name": "Volkov Labs",
+      "url": "https://volkovlabs.io"
     },
     "logos": {
-      "small": "img/icn-timeseries-panel.svg",
-      "large": "img/icn-timeseries-panel.svg"
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
     },
     "updated": "%TODAY%",
     "version": "%VERSION%"
