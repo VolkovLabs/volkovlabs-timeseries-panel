@@ -13,7 +13,7 @@ import { ExemplarsPlugin, getVisibleLabels } from './plugins/ExemplarsPlugin';
 import { OutsideRangePlugin } from './plugins/OutsideRangePlugin';
 import { ThresholdControlsPlugin } from './plugins/ThresholdControlsPlugin';
 import { TimescaleEditor } from './plugins/timescales/TimescaleEditor';
-import { TimescaleEditFormDTO } from './plugins/timescales/TimescaleEditorForm';
+import { TimescaleItem } from './plugins/timescales/TimescaleEditorForm';
 import { getPrepareTimeseriesSuggestion } from './suggestions';
 import { getTimezones, prepareGraphableFields, regenerateLinksSupplier } from './utils';
 
@@ -99,8 +99,8 @@ export const TimeSeriesPanel = ({
     setTimescalesFrame(null);
   }, [data.request?.targets]);
 
-  const onAddTimescale = useCallback(
-    async (formData: TimescaleEditFormDTO) => {
+  const onUpsertTimescale = useCallback(
+    async (formData: TimescaleItem) => {
       const { min, max, description, scale } = formData;
       const user = config.bootData.user;
       const userId = user?.id;
@@ -128,9 +128,16 @@ export const TimeSeriesPanel = ({
         ],
         to: 'now',
       });
-      setAddingTimescale(false);
     },
     [data]
+  );
+
+  const onUpsertTimescales = useCallback(
+    async (timescales: TimescaleItem[]) => {
+      await Promise.all(timescales.map((timescale) => onUpsertTimescale(timescale)));
+      setAddingTimescale(false);
+    },
+    [onUpsertTimescale]
   );
 
   const suggestions = useMemo(() => {
@@ -258,7 +265,7 @@ export const TimeSeriesPanel = ({
             )}
             {isAddingTimescale && (
               <TimescaleEditor
-                onSave={onAddTimescale}
+                onSave={onUpsertTimescales}
                 onDismiss={() => setAddingTimescale(false)}
                 scales={scales}
                 style={{

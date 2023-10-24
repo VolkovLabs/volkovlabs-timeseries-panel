@@ -2,34 +2,53 @@ import { NumberInput } from 'app/core/components/OptionsUI/NumberInput';
 import React, { HTMLAttributes, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useClickAway from 'react-use/lib/useClickAway';
 import { css, cx } from '@emotion/css';
-import {
-  AlertErrorPayload,
-  AlertPayload,
-  AppEvents,
-  DataFrame,
-  Field as FieldItem,
-  getDataFrameRow,
-  getDisplayProcessor,
-  GrafanaTheme2,
-} from '@grafana/data';
+import { AlertErrorPayload, AlertPayload, AppEvents, DataFrame, getDataFrameRow, GrafanaTheme2 } from '@grafana/data';
 import { getAppEvents, locationService } from '@grafana/runtime';
-import { Button, Field, HorizontalGroup, Select, Table, useStyles2, useTheme2 } from '@grafana/ui';
+import { Button, Field, HorizontalGroup, Select, useStyles2 } from '@grafana/ui';
+import { EditableTable } from './components';
+import { ColumnDef } from '@tanstack/react-table';
 
 /**
  * Constants
  */
 const MaxRows = 10;
-const RowHeight = 36;
+const RowHeight = 40.5;
 
-export interface TimescaleEditFormDTO {
-  description: string;
-  min: number;
-  max: number;
+/**
+ * Timescale Item
+ */
+export interface TimescaleItem {
+  /**
+   * Scale
+   *
+   * @type {string}
+   */
   scale: string;
+
+  /**
+   * Min
+   *
+   * @type {number}
+   */
+  min: number;
+
+  /**
+   * Max
+   *
+   * @type {number}
+   */
+  max: number;
+
+  /**
+   * Description
+   *
+   * @type {string}
+   */
+  description: string;
 }
 
 interface TimescaleEditorFormProps extends HTMLAttributes<HTMLDivElement> {
-  onSave: (data: TimescaleEditFormDTO) => void;
+  onSave: (data: TimescaleItem[]) => void;
   onDismiss: () => void;
   scales: string[];
   timescalesFrame: DataFrame | null;
@@ -66,20 +85,24 @@ const getTimescaleData = (data: DataFrame | null, metric: string) => {
 
 export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEditorFormProps>(
   ({ onSave, onDismiss, className, scales, timescalesFrame, ...otherProps }, ref) => {
-    const theme = useTheme2();
     const styles = useStyles2(getStyles);
     const clickAwayRef = useRef<HTMLDivElement>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [formData, setFormData] = useState<TimescaleEditFormDTO>({
-      description: '',
+    const [formData, setFormData] = useState<TimescaleItem>({
       min: 0,
       max: 0,
       scale: scales.length ? scales[0] : '',
+      description: '',
     });
     const [size, setSize] = useState({
       width: 0,
       height: 0,
     });
+
+    /**
+     * Editable Table Data
+     */
+    const [editableTableData, setEditableTableData] = useState<TimescaleItem[]>([]);
 
     /**
      * Events
@@ -109,61 +132,73 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
       }
     }, [timescalesFrame]);
 
-    const onSubmit = useCallback(
-      async (data: TimescaleEditFormDTO) => {
-        const notifySuccess = (payload: AlertPayload) =>
-          appEvents.publish({ type: AppEvents.alertSuccess.name, payload });
-        const notifyError = (payload: AlertErrorPayload) =>
-          appEvents.publish({ type: AppEvents.alertError.name, payload });
+    const onUpdateScales = useCallback(async () => {
+      const notifySuccess = (payload: AlertPayload) =>
+        appEvents.publish({ type: AppEvents.alertSuccess.name, payload });
+      const notifyError = (payload: AlertErrorPayload) =>
+        appEvents.publish({ type: AppEvents.alertError.name, payload });
 
-        setIsLoading(true);
-        try {
-          await onSave(data);
-          notifySuccess(['Scales updated successfully.']);
-          locationService.reload();
-        } catch (error: any) {
-          setIsLoading(false);
-          notifyError(['Scales Error', error]);
-        }
-      },
-      [onSave, appEvents]
-    );
+      setIsLoading(true);
+      try {
+        await onSave(editableTableData.concat(formData));
+        notifySuccess(['Scales updated successfully.']);
+        locationService.reload();
+      } catch (error: any) {
+        setIsLoading(false);
+        notifyError(['Scales Error', error]);
+      }
+    }, [appEvents, onSave, editableTableData, formData]);
 
-    const tableData = useMemo((): DataFrame | null => {
+    /**
+     * Transform frame into editableTable Data
+     */
+    useEffect(() => {
       if (!timescalesFrame) {
-        return null;
+        return;
       }
 
-      /**
-       * Set Display Names
-       */
-      timescalesFrame.fields.forEach((field) => {
-        if (field.name === 'metric') {
-          field.config.displayName = 'Scale';
-        } else if (field.name === 'min') {
-          field.config.displayName = 'Minimum';
-        } else if (field.name === 'max') {
-          field.config.displayName = 'Maximum';
-        }
-      });
+      const metricValues = timescalesFrame.fields.find((field) => field.name === 'metric')?.values?.toArray() || [];
+      const minValues = timescalesFrame.fields.find((field) => field.name === 'min')?.values?.toArray() || [];
+      const maxValues = timescalesFrame.fields.find((field) => field.name === 'max')?.values?.toArray() || [];
 
-      const fields = timescalesFrame.fields.map((field) => ({
-        ...field,
-        display: getDisplayProcessor({
-          field,
-          theme,
-        }),
-      }));
+      setEditableTableData(
+        metricValues.reduce((acc, value, index) => {
+          return acc.concat({
+            scale: value,
+            min: minValues[index],
+            max: maxValues[index],
+            description: '',
+          });
+        }, [])
+      );
+    }, [timescalesFrame]);
 
-      return {
-        ...timescalesFrame,
-        fields: [
-          fields.find((field) => field.name === 'metric'),
-          fields.find((field) => field.name === 'min'),
-          fields.find((field) => field.name === 'max'),
-        ].filter((field) => !!field) as FieldItem[],
-      };
-    }, [theme, timescalesFrame]);
+    /**
+     * Editable Table Columns
+     */
+    const columns: Array<ColumnDef<TimescaleItem>> = useMemo(() => {
+      return [
+        {
+          id: 'scale',
+          accessorKey: 'scale',
+          header: () => 'Scale',
+          cell: ({ getValue }) => getValue(),
+          enableResizing: false,
+        },
+        {
+          id: 'min',
+          accessorKey: 'min',
+          header: () => 'Minimum',
+          enableResizing: false,
+        },
+        {
+          id: 'max',
+          accessorKey: 'max',
+          header: () => 'Maximum',
+          enableResizing: false,
+        },
+      ];
+    }, []);
 
     const form = (
       <div // Timescale editor
@@ -176,61 +211,85 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
             <div className={styles.title}>Set Custom scales</div>
           </HorizontalGroup>
         </div>
-        {tableData && <Table data={tableData} width={size.width} height={size.height} />}
+        {editableTableData && (
+          <div className={styles.table} style={{ width: size.width, maxHeight: size.height }}>
+            <EditableTable
+              data={editableTableData}
+              columns={columns}
+              onUpdateData={(updatedRowIndex, updatedColumnId, value) => {
+                setEditableTableData((prev) => {
+                  return prev.map((row, rowIndex) => {
+                    if (rowIndex !== updatedRowIndex) {
+                      return row;
+                    }
+
+                    let normalizedValue = value;
+
+                    /**
+                     * Convert to number
+                     */
+                    if (updatedColumnId === 'min' || updatedColumnId === 'max') {
+                      const numberValue = Number(value);
+                      normalizedValue = Number.isNaN(numberValue) ? 0 : numberValue;
+                    }
+
+                    return {
+                      ...row,
+                      [updatedColumnId]: normalizedValue,
+                    };
+                  });
+                });
+              }}
+            />
+          </div>
+        )}
         <hr />
         <div className={styles.editorForm}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              onSubmit(formData);
-            }}
-          >
-            <Field label={'Scale'}>
-              <Select
-                value={formData.scale}
-                options={scales.map((value: string) => ({ value, label: value }))}
-                onChange={(value: any) => {
-                  setFormData({
-                    ...formData,
-                    ...getTimescaleData(timescalesFrame, value.value),
-                    scale: value.value,
-                  });
-                }}
-              />
-            </Field>
-            <Field label={'Minimum'}>
-              <NumberInput
-                value={formData.min}
-                min={0}
-                onChange={(value) => {
-                  setFormData({
-                    ...formData,
-                    min: value || 0,
-                  });
-                }}
-              />
-            </Field>
-            <Field label={'Maximum'}>
-              <NumberInput
-                value={formData.max}
-                min={0}
-                onChange={(value) => {
-                  setFormData({
-                    ...formData,
-                    max: value || 0,
-                  });
-                }}
-              />
-            </Field>
-            <HorizontalGroup justify={'flex-end'}>
-              <Button size={'sm'} variant="secondary" onClick={onDismiss} fill="outline">
-                Cancel
-              </Button>
-              <Button size={'sm'} type={'submit'} disabled={isLoading}>
-                {isLoading ? 'Saving' : 'Save'}
-              </Button>
-            </HorizontalGroup>
-          </form>
+          <Field label={'Scale'}>
+            <Select
+              value={formData.scale}
+              options={scales.map((value: string) => ({ value, label: value }))}
+              onChange={(value: any) => {
+                setFormData({
+                  ...formData,
+                  ...getTimescaleData(timescalesFrame, value.value),
+                  scale: value.value,
+                });
+              }}
+            />
+          </Field>
+          <Field label={'Minimum'}>
+            <NumberInput
+              value={formData.min}
+              min={0}
+              onChange={(value) => {
+                setFormData({
+                  ...formData,
+                  min: value || 0,
+                });
+              }}
+            />
+          </Field>
+          <Field label={'Maximum'}>
+            <NumberInput
+              value={formData.max}
+              min={0}
+              onChange={(value) => {
+                setFormData({
+                  ...formData,
+                  max: value || 0,
+                });
+              }}
+            />
+          </Field>
+          <HorizontalGroup justify={'flex-end'}>
+            <Button size={'sm'} variant="secondary" onClick={onDismiss} fill="outline">
+              Cancel
+            </Button>
+            <Button size={'sm'} type={'submit'} disabled={isLoading} onClick={onUpdateScales}>
+              {isLoading ? 'Saving' : 'Save'}
+            </Button>
+          </HorizontalGroup>
         </div>
       </div>
     );
@@ -275,6 +334,9 @@ const getStyles = (theme: GrafanaTheme2) => {
     `,
     title: css`
       font-weight: ${theme.typography.fontWeightMedium};
+    `,
+    table: css`
+      overflow: auto;
     `,
   };
 };
