@@ -15,6 +15,7 @@ import { ThresholdControlsPlugin } from './plugins/ThresholdControlsPlugin';
 import { TimescaleEditor } from './plugins/timescales/TimescaleEditor';
 import { TimescaleItem } from './plugins/timescales/TimescaleEditorForm';
 import { getPrepareTimeseriesSuggestion } from './suggestions';
+import { useRuntimeVariables } from './hooks';
 import { getTimezones, prepareGraphableFields, regenerateLinksSupplier } from './utils';
 
 interface TimeSeriesPanelProps extends PanelProps<Options> {}
@@ -30,6 +31,7 @@ export const TimeSeriesPanel = ({
   onChangeTimeRange,
   replaceVariables,
   id,
+  eventBus,
 }: TimeSeriesPanelProps) => {
   const { sync, canAddAnnotations, onThresholdsChange, canEditThresholds, showThresholds, onSplitOpen } =
     usePanelContext();
@@ -64,10 +66,20 @@ export const TimeSeriesPanel = ({
       });
   }
 
+  const { variable: wellVariable } = useRuntimeVariables(eventBus, options.variable);
+
+  let well = '';
+  if (
+    wellVariable &&
+    (wellVariable.type === 'query' || wellVariable.type === 'custom' || wellVariable.type === 'constant')
+  ) {
+    well = Array.isArray(wellVariable.current.value) ? wellVariable.current.value[0] : wellVariable.current.value;
+  }
+
   const getTimescales = useCallback(async () => {
     const user = config.bootData.user;
     const userId = user?.id;
-    const rawSql = `select last(min, time) as min, last(max, time) as max, metric from scales where user_id='${userId}' group by metric;`;
+    const rawSql = `select min, max, metric from scales where user_id='${userId}' and well='${well}';`;
     const target = data.request?.targets[0];
     const datasourceId = target?.datasource?.uid;
     const refId = target?.refId;
@@ -97,7 +109,7 @@ export const TimeSeriesPanel = ({
     }
 
     setTimescalesFrame(null);
-  }, [data.request?.targets]);
+  }, [data.request?.targets, well]);
 
   const onUpsertTimescale = useCallback(
     async (formData: TimescaleItem) => {
@@ -105,7 +117,7 @@ export const TimeSeriesPanel = ({
       const user = config.bootData.user;
       const userId = user?.id;
       const sanitizedDescription = description.replace(/\"|\'/g, '');
-      const rawSql = `insert into scales values(now(), ${min}, ${max}, '${sanitizedDescription}', ${userId}, '${scale}')`;
+      const rawSql = `insert into scales values ('${well}', '${userId}', '${scale}', ${min}, ${max}, '${sanitizedDescription}') on conflict (well, user_id, metric) do update set min = excluded.min, max = excluded.max;`;
       const target = data.request?.targets[0];
       const datasourceId = target?.datasource?.uid;
       const refId = target?.refId;
@@ -129,7 +141,7 @@ export const TimeSeriesPanel = ({
         to: 'now',
       });
     },
-    [data]
+    [data.request?.targets, well]
   );
 
   const onUpsertTimescales = useCallback(
