@@ -163,15 +163,18 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
 
       setEditableTableData(
         metricValues.reduce((acc, value, index) => {
-          return acc.concat({
-            scale: value,
-            min: minValues[index],
-            max: maxValues[index],
-            description: '',
-          });
+          if (value !== formData.scale) {
+            return acc.concat({
+              scale: value,
+              min: minValues[index],
+              max: maxValues[index],
+              description: '',
+            });
+          }
+          return acc;
         }, [])
       );
-    }, [timescalesFrame]);
+    }, [formData.scale, timescalesFrame]);
 
     /**
      * Editable Table Columns
@@ -283,6 +286,27 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
             />
           </Field>
           <HorizontalGroup justify={'flex-end'}>
+            <Button
+              size={'sm'}
+              variant="secondary"
+              onClick={() => {
+                setEditableTableData((prev) =>
+                  prev.map((scale) => ({
+                    ...scale,
+                    min: 0,
+                    max: 0,
+                  }))
+                );
+                setFormData((prev) => ({
+                  ...prev,
+                  min: 0,
+                  max: 0,
+                }));
+              }}
+              fill="outline"
+            >
+              Reset
+            </Button>
             <Button size={'sm'} variant="secondary" onClick={onDismiss} fill="outline">
               Cancel
             </Button>
