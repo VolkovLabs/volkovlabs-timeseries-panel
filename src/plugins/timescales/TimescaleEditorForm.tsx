@@ -1,10 +1,9 @@
-import { NumberInput } from 'app/core/components/OptionsUI/NumberInput';
 import React, { HTMLAttributes, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useClickAway from 'react-use/lib/useClickAway';
 import { css, cx } from '@emotion/css';
-import { AlertErrorPayload, AlertPayload, AppEvents, DataFrame, getDataFrameRow, GrafanaTheme2 } from '@grafana/data';
+import { AlertErrorPayload, AlertPayload, AppEvents, DataFrame, GrafanaTheme2 } from '@grafana/data';
 import { getAppEvents, locationService } from '@grafana/runtime';
-import { Button, Field, HorizontalGroup, Select, useStyles2 } from '@grafana/ui';
+import { Button, HorizontalGroup, useStyles2 } from '@grafana/ui';
 import { EditableTable } from './components';
 import { ColumnDef } from '@tanstack/react-table';
 
@@ -54,46 +53,11 @@ interface TimescaleEditorFormProps extends HTMLAttributes<HTMLDivElement> {
   timescalesFrame: DataFrame | null;
 }
 
-const getTimescaleData = (data: DataFrame | null, metric: string) => {
-  const defaultData = {
-    min: 0,
-    max: 0,
-    scale: metric,
-  };
-
-  if (!data) {
-    return defaultData;
-  }
-
-  const index = data.fields
-    .find((field) => field.name === 'metric')
-    ?.values.toArray()
-    .findIndex((value) => value === metric);
-
-  if (index === undefined || index < 0) {
-    return defaultData;
-  }
-
-  const row = getDataFrameRow(data, index);
-
-  return {
-    min: row[data.fields.findIndex((field) => field.name === 'min')] as number,
-    max: row[data.fields.findIndex((field) => field.name === 'max')] as number,
-    scale: metric,
-  };
-};
-
 export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEditorFormProps>(
   ({ onSave, onDismiss, className, scales, timescalesFrame, ...otherProps }, ref) => {
     const styles = useStyles2(getStyles);
     const clickAwayRef = useRef<HTMLDivElement>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [formData, setFormData] = useState<TimescaleItem>({
-      min: 0,
-      max: 0,
-      scale: scales.length ? scales[0] : '',
-      description: '',
-    });
     const [size, setSize] = useState({
       width: 0,
       height: 0,
@@ -115,22 +79,13 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
 
     useEffect(() => {
       const formElement = document.querySelector(`.${styles.editor}`);
-      if (formElement && timescalesFrame) {
+      if (formElement && scales) {
         setSize({
           width: formElement.clientWidth,
-          height: (Math.min(timescalesFrame.length, MaxRows) + 1) * RowHeight,
+          height: (Math.min(scales.length, MaxRows) + 1) * RowHeight,
         });
       }
-    }, [ref, styles.editor, timescalesFrame]);
-
-    useEffect(() => {
-      if (timescalesFrame) {
-        setFormData((previous) => ({
-          ...previous,
-          ...getTimescaleData(timescalesFrame, previous.scale),
-        }));
-      }
-    }, [timescalesFrame]);
+    }, [ref, styles.editor, scales]);
 
     const onUpdateScales = useCallback(async () => {
       const notifySuccess = (payload: AlertPayload) =>
@@ -140,14 +95,14 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
 
       setIsLoading(true);
       try {
-        await onSave(editableTableData.concat(formData));
+        await onSave(editableTableData);
         notifySuccess(['Scales updated successfully.']);
         locationService.reload();
       } catch (error: any) {
         setIsLoading(false);
         notifyError(['Scales Error', error]);
       }
-    }, [appEvents, onSave, editableTableData, formData]);
+    }, [appEvents, onSave, editableTableData]);
 
     /**
      * Transform frame into editableTable Data
@@ -157,24 +112,36 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
         return;
       }
 
+      /**
+       * Scale Values from dataFrame
+       */
       const metricValues = timescalesFrame.fields.find((field) => field.name === 'metric')?.values?.toArray() || [];
       const minValues = timescalesFrame.fields.find((field) => field.name === 'min')?.values?.toArray() || [];
       const maxValues = timescalesFrame.fields.find((field) => field.name === 'max')?.values?.toArray() || [];
 
+      /**
+       * Scale Values Map
+       */
+      const scaleValuesMap: Map<string, { min: number; max: number }> = metricValues.reduce((acc, value, index) => {
+        acc.set(value, {
+          min: minValues[index],
+          max: maxValues[index],
+        });
+        return acc;
+      }, new Map());
+
+      /**
+       * Set Table Data
+       */
       setEditableTableData(
-        metricValues.reduce((acc, value, index) => {
-          if (value !== formData.scale) {
-            return acc.concat({
-              scale: value,
-              min: minValues[index],
-              max: maxValues[index],
-              description: '',
-            });
-          }
-          return acc;
-        }, [])
+        scales.map((scale) => ({
+          scale,
+          min: scaleValuesMap.get(scale)?.min ?? 0,
+          max: scaleValuesMap.get(scale)?.max ?? 0,
+          description: '',
+        }))
       );
-    }, [formData.scale, timescalesFrame]);
+    }, [timescalesFrame, scales]);
 
     /**
      * Editable Table Columns
@@ -246,45 +213,7 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
             />
           </div>
         )}
-        <hr />
-        <div className={styles.editorForm}>
-          <Field label={'Scale'}>
-            <Select
-              value={formData.scale}
-              options={scales.map((value: string) => ({ value, label: value }))}
-              onChange={(value: any) => {
-                setFormData({
-                  ...formData,
-                  ...getTimescaleData(timescalesFrame, value.value),
-                  scale: value.value,
-                });
-              }}
-            />
-          </Field>
-          <Field label={'Minimum'}>
-            <NumberInput
-              value={formData.min}
-              min={0}
-              onChange={(value) => {
-                setFormData({
-                  ...formData,
-                  min: value || 0,
-                });
-              }}
-            />
-          </Field>
-          <Field label={'Maximum'}>
-            <NumberInput
-              value={formData.max}
-              min={0}
-              onChange={(value) => {
-                setFormData({
-                  ...formData,
-                  max: value || 0,
-                });
-              }}
-            />
-          </Field>
+        <div className={styles.footer}>
           <HorizontalGroup justify={'flex-end'}>
             <Button
               size={'sm'}
@@ -297,11 +226,6 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
                     max: 0,
                   }))
                 );
-                setFormData((prev) => ({
-                  ...prev,
-                  min: 0,
-                  max: 0,
-                }));
               }}
               fill="outline"
             >
@@ -349,9 +273,6 @@ const getStyles = (theme: GrafanaTheme2) => {
       border-radius: ${theme.shape.borderRadius()};
       width: 460px;
     `,
-    editorForm: css`
-      padding: ${theme.spacing(1)};
-    `,
     header: css`
       border-bottom: 1px solid ${theme.colors.border.weak};
       padding: ${theme.spacing(1.5, 1)};
@@ -361,6 +282,10 @@ const getStyles = (theme: GrafanaTheme2) => {
     `,
     table: css`
       overflow: auto;
+    `,
+    footer: css`
+      padding: ${theme.spacing(1)};
+      border-top: 1px solid ${theme.colors.border.weak};
     `,
   };
 };

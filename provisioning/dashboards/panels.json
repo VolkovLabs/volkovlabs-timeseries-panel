@@ -227,7 +227,7 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "select min, max from scales where metric='Temperature' order by time desc limit 1;",
+          "rawSql": "select min, max from scales where metric='Temperature';",
           "refId": "B",
           "sql": {
             "columns": [
