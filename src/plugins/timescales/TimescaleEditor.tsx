@@ -2,10 +2,10 @@ import React, { HTMLAttributes, useState } from 'react';
 import { usePopper } from 'react-popper';
 import { Portal } from '@grafana/ui';
 import { DataFrame } from '@grafana/data';
-import { TimescaleEditFormDTO, TimescaleEditorForm } from './TimescaleEditorForm';
+import { TimescaleEditorForm, TimescaleItem } from './TimescaleEditorForm';
 
 interface TimescaleEditorProps extends HTMLAttributes<HTMLDivElement> {
-  onSave: (data: TimescaleEditFormDTO) => void;
+  onSave: (data: TimescaleItem[]) => void;
   onDismiss: () => void;
   scales: string[];
   timescalesFrame: DataFrame | null;
