@@ -1,6 +1,7 @@
 import { css as cssCore, Global } from '@emotion/react';
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useClickAway } from 'react-use';
+import { pluginLog } from '../ui/components/uPlot/utils';
 
 import { CartesianCoords2D, DataFrame, getFieldDisplayName, InterpolateFunction, TimeZone } from '@grafana/data';
 import {
@@ -53,7 +54,7 @@ export const ContextMenuPlugin = ({
   }, [setIsOpen]);
 
   const clearSelection = useCallback(() => {
-    console.log('ContextMenuPlugin', false, 'clearing click selection');
+    pluginLog('ContextMenuPlugin', false, 'clearing click selection');
     setPoint(null);
   }, [setPoint]);
 
@@ -94,7 +95,7 @@ export const ContextMenuPlugin = ({
       plotCanvas.current = canvas || undefined;
       plotCanvas.current?.addEventListener('mousedown', onMouseCapture);
 
-      console.log('ContextMenuPlugin', false, 'init');
+      pluginLog('ContextMenuPlugin', false, 'init');
       // for naive click&drag check
       let isClick = false;
 
@@ -120,7 +121,7 @@ export const ContextMenuPlugin = ({
 
         if (e.target instanceof HTMLElement) {
           if (!e.target.classList.contains('u-cursor-pt')) {
-            console.log('ContextMenuPlugin', false, 'canvas click');
+            pluginLog('ContextMenuPlugin', false, 'canvas click');
             setPoint({ seriesIdx: null, dataIdx: null });
           }
         }
@@ -134,7 +135,7 @@ export const ContextMenuPlugin = ({
           pt.addEventListener('click', () => {
             const seriesIdx = i + 1;
             const dataIdx = u.cursor.idx;
-            console.log('ContextMenuPlugin', false, seriesIdx, dataIdx);
+            pluginLog('ContextMenuPlugin', false, seriesIdx, dataIdx);
             setPoint({ seriesIdx, dataIdx: dataIdx ?? null });
           });
         });
