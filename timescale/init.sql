@@ -30,12 +30,13 @@ CREATE TABLE config (
 );
 
 CREATE TABLE scales (
-    time timestamp with time zone NOT NULL,
+    well text NOT NULL,
+    user_id text NOT NULL,
+    metric text NOT NULL,
     min DOUBLE PRECISION NULL,
     max DOUBLE PRECISION NULL,
     description text NOT NULL,
-    user_id text NOT NULL,
-    metric text NOT NULL
+    UNIQUE (well, user_id, metric)
 );
 
 CREATE SEQUENCE seq_metrics START 1;
@@ -47,7 +48,6 @@ SELECT create_hypertable('metrics','time');
 SELECT create_hypertable('metrics2','time');
 SELECT create_hypertable('controls','time');
 SELECT create_hypertable('config','time');
-SELECT create_hypertable('scales','time');
 
 CREATE INDEX ix_metrics_name_time ON metrics (name, time DESC);
 CREATE INDEX ix_metrics2_name_time ON metrics (name, time DESC);
