@@ -18,8 +18,8 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm install
@@ -28,13 +28,13 @@ jobs:
         run: npm run build
 
       - name: Start Grafana
-        run: docker-compose up -d
+        run: docker compose up -d
 
       - name: Run e2e tests
         run: npm run e2e
 
       - name: Stop Grafana
-        run: docker-compose down
+        run: docker compose down
 
       - uses: actions/upload-artifact@v3
         if: failure()
