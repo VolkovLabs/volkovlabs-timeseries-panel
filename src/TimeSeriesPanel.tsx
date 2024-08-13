@@ -2,7 +2,7 @@ import { config } from 'app/core/config';
 import { getFieldLinksForExplore } from 'app/features/explore/utils/links';
 import React, { useCallback, useMemo, useState } from 'react';
 import { CartesianCoords2D, DataFrame, DataFrameType, Field, PanelProps, toDataFrame } from '@grafana/data';
-import { getBackendSrv, PanelDataErrorView } from '@grafana/runtime';
+import { getAppEvents, getBackendSrv, PanelDataErrorView } from '@grafana/runtime';
 import { TooltipDisplayMode } from '@grafana/schema';
 import { KeyboardPlugin, MenuItemProps, TimeSeries, TooltipPlugin, usePanelContext, ZoomPlugin } from '@grafana/ui';
 import { Options } from './panelcfg.gen';
@@ -147,9 +147,18 @@ export const TimeSeriesPanel = ({
   const onUpsertTimescales = useCallback(
     async (timescales: TimescaleItem[]) => {
       await Promise.all(timescales.map((timescale) => onUpsertTimescale(timescale)));
-      setAddingTimescale(false);
+
+      /**
+       * Publish refresh event
+       */
+      getAppEvents().publish({ type: 'variables-changed', payload: { refreshAll: true } });
+
+      /**
+       * Refresh timescales
+       */
+      await getTimescales();
     },
-    [onUpsertTimescale]
+    [getTimescales, onUpsertTimescale]
   );
 
   const suggestions = useMemo(() => {

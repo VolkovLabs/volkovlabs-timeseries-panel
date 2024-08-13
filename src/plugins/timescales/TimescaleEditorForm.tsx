@@ -2,8 +2,8 @@ import React, { HTMLAttributes, useCallback, useEffect, useMemo, useRef, useStat
 import useClickAway from 'react-use/lib/useClickAway';
 import { css, cx } from '@emotion/css';
 import { AlertErrorPayload, AlertPayload, AppEvents, DataFrame, GrafanaTheme2 } from '@grafana/data';
-import { getAppEvents, locationService } from '@grafana/runtime';
-import { Button, HorizontalGroup, useStyles2 } from '@grafana/ui';
+import { getAppEvents } from '@grafana/runtime';
+import { Button, HorizontalGroup, IconButton, useStyles2 } from '@grafana/ui';
 import { EditableTable } from './components';
 import { ColumnDef } from '@tanstack/react-table';
 
@@ -97,7 +97,7 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
       try {
         await onSave(editableTableData);
         notifySuccess(['Scales updated successfully.']);
-        locationService.reload();
+        setIsLoading(false);
       } catch (error: any) {
         setIsLoading(false);
         notifyError(['Scales Error', error]);
@@ -179,6 +179,7 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
         <div className={styles.header}>
           <HorizontalGroup justify={'space-between'} align={'center'}>
             <div className={styles.title}>Set Custom scales</div>
+            <IconButton name="times" aria-label="Close" onClick={onDismiss} />
           </HorizontalGroup>
         </div>
         {editableTableData && (
