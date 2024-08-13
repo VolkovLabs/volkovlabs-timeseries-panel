@@ -79,7 +79,7 @@ export const TimeSeriesPanel = ({
   const getTimescales = useCallback(async () => {
     const user = config.bootData.user;
     const userId = user?.id;
-    const rawSql = `select min, max, metric from scales where user_id='${userId}' and well='${well}';`;
+    const rawSql = `select min, max, metric from scales where user_id=${userId} and well='${well}';`;
     const target = data.request?.targets[0];
     const datasourceId = target?.datasource?.uid;
     const refId = target?.refId;
@@ -117,7 +117,7 @@ export const TimeSeriesPanel = ({
       const user = config.bootData.user;
       const userId = user?.id;
       const sanitizedDescription = description.replace(/\"|\'/g, '');
-      const rawSql = `insert into scales values ('${well}', '${userId}', '${scale}', ${min}, ${max}, '${sanitizedDescription}') on conflict (well, user_id, metric) do update set min = excluded.min, max = excluded.max;`;
+      const rawSql = `insert into scales values ('${well}', ${userId}, '${scale}', ${min}, ${max}, '${sanitizedDescription}') on conflict (well, user_id, metric) do update set min = excluded.min, max = excluded.max;`;
       const target = data.request?.targets[0];
       const datasourceId = target?.datasource?.uid;
       const refId = target?.refId;
