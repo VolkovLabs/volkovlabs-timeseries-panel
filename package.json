@@ -67,8 +67,8 @@
     "lint": "eslint --ignore-path ./.eslintignore --ext .js,.jsx,.ts,.tsx .",
     "lint:fix": "eslint --fix --ignore-path ./.eslintignore --ext .js,.jsx,.ts,.tsx .",
     "sign": "npx --yes @grafana/sign-plugin@latest --rootUrls http://localhost:3000/",
-    "start": "docker-compose pull && docker-compose up",
-    "stop": "docker-compose down",
+    "start": "docker compose pull && docker compose up",
+    "stop": "docker compose down",
     "test": "jest --watch --onlyChanged",
     "test:ci": "jest --maxWorkers 4 --coverage",
     "upgrade": "npm upgrade --save"
