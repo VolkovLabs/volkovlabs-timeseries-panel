@@ -113,11 +113,13 @@ export const TimeSeriesPanel = ({
 
   const onUpsertTimescale = useCallback(
     async (formData: TimescaleItem) => {
-      const { min, max, description, scale } = formData;
+      const { min, max, description, scale, auto } = formData;
       const user = config.bootData.user;
       const userId = user?.id;
       const sanitizedDescription = description.replace(/\"|\'/g, '');
-      const rawSql = `insert into scales values ('${well}', ${userId}, '${scale}', ${min}, ${max}, '${sanitizedDescription}') on conflict (well, user_id, metric) do update set min = excluded.min, max = excluded.max;`;
+      const rawSql = `insert into scales values ('${well}', ${userId}, '${scale}', ${auto ? null : min}, ${
+        auto ? null : max
+      }, '${sanitizedDescription}') on conflict (well, user_id, metric) do update set min = excluded.min, max = excluded.max;`;
       const target = data.request?.targets[0];
       const datasourceId = target?.datasource?.uid;
       const refId = target?.refId;

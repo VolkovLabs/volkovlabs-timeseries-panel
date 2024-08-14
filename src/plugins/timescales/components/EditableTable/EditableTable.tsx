@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Input, useStyles2 } from '@grafana/ui';
+import { Checkbox, Input, useStyles2 } from '@grafana/ui';
 import { ColumnDef, flexRender, getCoreRowModel, RowData, useReactTable } from '@tanstack/react-table';
 import { cx } from '@emotion/css';
 import { Styles } from './EditableTable.styles';
@@ -34,7 +34,7 @@ declare module '@tanstack/react-table' {
  * Default Column
  */
 const defaultColumn: Partial<ColumnDef<any>> = {
-  cell: ({ getValue, row: { index }, column: { id }, table }) => {
+  cell: ({ getValue, row: { index, original }, column: { id }, table }) => {
     const initialValue = getValue();
     /**
      *  We need to keep and update the state of the cell normally
@@ -45,7 +45,7 @@ const defaultColumn: Partial<ColumnDef<any>> = {
     /**
      * When the input is blurred, we'll call our table meta's updateData function
      */
-    const onBlur = () => {
+    const onSaveValue = (value: unknown) => {
       table.options.meta?.updateData(index, id, value);
     };
 
@@ -57,12 +57,26 @@ const defaultColumn: Partial<ColumnDef<any>> = {
       setValue(initialValue);
     }, [initialValue]);
 
+    if (id === 'auto') {
+      return (
+        <Checkbox
+          value={value as boolean}
+          onChange={(e) => {
+            setValue(e.currentTarget.checked);
+            onSaveValue(e.currentTarget.checked);
+          }}
+        />
+      );
+    }
+
     return (
       <Input
-        value={value as string}
+        value={original.auto ? '' : (value as string)}
+        placeholder={original ? 'Auto' : ''}
         onChange={(e) => setValue(e.currentTarget.value)}
-        onBlur={onBlur}
+        onBlur={() => onSaveValue(value)}
         type={typeof initialValue === 'number' ? 'number' : 'text'}
+        disabled={original.auto}
       />
     );
   },
@@ -121,7 +135,16 @@ export const EditableTable = <TData,>({ data, columns, onUpdateData }: Props<TDa
           return (
             <tr key={row.id} className={styles.row}>
               {row.getVisibleCells().map((cell) => {
-                return <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>;
+                return (
+                  <td
+                    key={cell.id}
+                    className={cx({
+                      [styles.cellCenter]: cell.column.id === 'auto',
+                    })}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                );
               })}
             </tr>
           );
