@@ -42,5 +42,8 @@ export const Styles = (theme: GrafanaTheme2) => {
         border-bottom: 0;
       }
     `,
+    cellCenter: css`
+      text-align: center;
+    `,
   };
 };

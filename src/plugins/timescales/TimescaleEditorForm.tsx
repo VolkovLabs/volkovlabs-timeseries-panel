@@ -29,14 +29,14 @@ export interface TimescaleItem {
    *
    * @type {number}
    */
-  min: number;
+  min: number | null;
 
   /**
    * Max
    *
    * @type {number}
    */
-  max: number;
+  max: number | null;
 
   /**
    * Description
@@ -44,6 +44,13 @@ export interface TimescaleItem {
    * @type {string}
    */
   description: string;
+
+  /**
+   * Auto
+   *
+   * @type {boolean}
+   */
+  auto: boolean;
 }
 
 interface TimescaleEditorFormProps extends HTMLAttributes<HTMLDivElement> {
@@ -134,12 +141,19 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
        * Set Table Data
        */
       setEditableTableData(
-        scales.map((scale) => ({
-          scale,
-          min: scaleValuesMap.get(scale)?.min ?? 0,
-          max: scaleValuesMap.get(scale)?.max ?? 0,
-          description: '',
-        }))
+        scales.map((scale) => {
+          const min = scaleValuesMap.get(scale)?.min;
+          const max = scaleValuesMap.get(scale)?.max;
+          const auto = min === null || max === null;
+
+          return {
+            scale,
+            min: min ?? 0,
+            max: max ?? 0,
+            description: '',
+            auto,
+          };
+        })
       );
     }, [timescalesFrame, scales]);
 
@@ -153,6 +167,12 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
           accessorKey: 'scale',
           header: () => 'Scale',
           cell: ({ getValue }) => getValue(),
+          enableResizing: false,
+        },
+        {
+          id: 'auto',
+          accessorKey: 'auto',
+          header: () => 'Auto',
           enableResizing: false,
         },
         {
@@ -223,6 +243,7 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
                 setEditableTableData((prev) =>
                   prev.map((scale) => ({
                     ...scale,
+                    auto: false,
                     min: 0,
                     max: 0,
                   }))
