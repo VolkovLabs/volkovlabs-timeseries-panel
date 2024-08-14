@@ -1,5 +1,12 @@
 # Change Log
 
+## 1.2.0 (2024-08-14)
+
+### Features / Enhancements
+
+- Replaced page reload to refresh dashboard (#12)
+- Allowed to set auto mode per scale (#13)
+
 ## 1.1.0 (2024-07-31)
 
 ### Features / Enhancements
