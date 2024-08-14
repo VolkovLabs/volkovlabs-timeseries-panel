@@ -144,7 +144,7 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
         scales.map((scale) => {
           const min = scaleValuesMap.get(scale)?.min;
           const max = scaleValuesMap.get(scale)?.max;
-          const auto = min === null || max === null;
+          const auto = min === null || max === null || (!min && !max);
 
           return {
             scale,
@@ -243,7 +243,7 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
                 setEditableTableData((prev) =>
                   prev.map((scale) => ({
                     ...scale,
-                    auto: false,
+                    auto: true,
                     min: 0,
                     max: 0,
                   }))
