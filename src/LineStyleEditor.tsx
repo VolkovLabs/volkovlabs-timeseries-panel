@@ -52,7 +52,7 @@ const dotOptions: Array<SelectableValue<string>> = [
   value: txt,
 }));
 
-type Props = FieldOverrideEditorProps<LineStyle, unknown>;
+type Props = FieldOverrideEditorProps<LineStyle, {}>;
 
 export const LineStyleEditor = ({ value, onChange }: Props) => {
   const options = useMemo(() => (value?.fill === 'dash' ? dashOptions : dotOptions), [value]);
@@ -113,7 +113,7 @@ export const LineStyleEditor = ({ value, onChange }: Props) => {
               target="_blank"
               rel="noreferrer"
             >
-              <IconButton name="question-circle" />
+              <IconButton name="question-circle" aria-label="Help" />
             </a>
           </div>
         </>

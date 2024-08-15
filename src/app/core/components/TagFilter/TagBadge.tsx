@@ -26,7 +26,11 @@ export class TagBadge extends React.Component<Props> {
 
     return (
       <span className={`label label-tag`} style={tagStyle}>
-        {removeIcon && <Icon onClick={onClick} name="times" />}
+        {removeIcon && (
+          <span onClick={onClick}>
+            <Icon name="times" />
+          </span>
+        )}
         {label} {countLabel}
       </span>
     );

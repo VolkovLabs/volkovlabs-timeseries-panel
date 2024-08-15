@@ -18,7 +18,7 @@ const GAPS_OPTIONS: Array<SelectableValue<boolean | number>> = [
   },
 ];
 
-type Props = FieldOverrideEditorProps<boolean | number, unknown>;
+type Props = FieldOverrideEditorProps<boolean | number, { isTime: boolean }>;
 
 export const SpanNullsEditor = ({ value, onChange }: Props) => {
   const isThreshold = typeof value === 'number';

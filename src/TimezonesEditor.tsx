@@ -46,9 +46,9 @@ export const TimezonesEditor = ({ value, onChange }: Props) => {
             />
           </span>
           {idx === value.length - 1 ? (
-            <IconButton ariaLabel="Add timezone" name="plus" onClick={addTimezone} />
+            <IconButton aria-label="Add timezone" name="plus" onClick={addTimezone} />
           ) : (
-            <IconButton ariaLabel="Remove timezone" name="times" onClick={() => removeTimezone(idx)} />
+            <IconButton aria-label="Remove timezone" name="times" onClick={() => removeTimezone(idx)} />
           )}
         </div>
       ))}
@@ -60,7 +60,7 @@ const getStyles = (theme: GrafanaTheme2) => ({
   wrapper: css`
     width: 100%;
     display: flex;
-    flex-direction: rows;
+    flex-direction: row;
     align-items: center;
   `,
   first: css`

@@ -63,14 +63,14 @@ export function AnnotationMarker({ annotation, timeZone, width }: Props) {
 
   const onMouseEnter = useCallback(() => {
     if (popoverRenderTimeout.current) {
-      clearTimeout(popoverRenderTimeout.current);
+      clearTimeout(popoverRenderTimeout.current as any);
     }
     setIsOpen(true);
   }, [setIsOpen]);
 
   const onPopoverMouseEnter = useCallback(() => {
     if (popoverRenderTimeout.current) {
-      clearTimeout(popoverRenderTimeout.current);
+      clearTimeout(popoverRenderTimeout.current as any);
     }
   }, []);
 
