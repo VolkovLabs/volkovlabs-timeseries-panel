@@ -2,7 +2,8 @@ import { css, cx } from '@emotion/css';
 import React, { HTMLAttributes, useState } from 'react';
 import { usePopper } from 'react-popper';
 
-import { colorManipulator, DataFrame, getDisplayProcessor, GrafanaTheme2, TimeZone } from '@grafana/data';
+import { colorManipulator, DataFrame, getDisplayProcessor, GrafanaTheme2 } from '@grafana/data';
+import { TimeZone } from '@grafana/schema';
 import { DEFAULT_ANNOTATION_COLOR, PlotSelection, Portal, useStyles2, useTheme2 } from '@grafana/ui';
 
 import { getCommonAnnotationStyles } from '../styles';

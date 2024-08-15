@@ -1,10 +1,10 @@
 import React, { useCallback } from 'react';
 
-import { FieldOverrideEditorProps, SelectableValue } from '@grafana/data';
+import { SelectableValue, StandardEditorProps } from '@grafana/data';
 import { GraphThresholdsStyleMode } from '@grafana/schema';
 import { Select } from '@grafana/ui';
 
-type Props = FieldOverrideEditorProps<SelectableValue<{ mode: GraphThresholdsStyleMode }>, any>;
+type Props = StandardEditorProps<SelectableValue<{ mode: GraphThresholdsStyleMode }>, any>;
 
 export const ThresholdsStyleEditor = ({ item, value, onChange, id }: Props) => {
   const onChangeCb = useCallback(

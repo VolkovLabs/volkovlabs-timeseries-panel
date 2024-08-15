@@ -2,7 +2,8 @@ import { css as cssCore, Global } from '@emotion/react';
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useClickAway } from 'react-use';
 
-import { CartesianCoords2D, DataFrame, getFieldDisplayName, InterpolateFunction, TimeZone } from '@grafana/data';
+import { CartesianCoords2D, DataFrame, getFieldDisplayName, InterpolateFunction } from '@grafana/data';
+import { TimeZone } from '@grafana/schema';
 import {
   ContextMenu,
   GraphContextMenuHeader,
@@ -233,7 +234,7 @@ export const ContextMenuView = ({
     return null;
   }
   const items = defaultItems ? [...defaultItems] : [];
-  let renderHeader: () => JSX.Element | null = () => null;
+  let renderHeader: () => React.JSX.Element | null = () => null;
 
   if (selection.point) {
     const { seriesIdx, dataIdx } = selection.point;

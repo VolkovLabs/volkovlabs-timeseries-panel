@@ -3,7 +3,7 @@ import useClickAway from 'react-use/lib/useClickAway';
 import { css, cx } from '@emotion/css';
 import { AlertErrorPayload, AlertPayload, AppEvents, DataFrame, GrafanaTheme2 } from '@grafana/data';
 import { getAppEvents } from '@grafana/runtime';
-import { Button, HorizontalGroup, IconButton, useStyles2 } from '@grafana/ui';
+import { Button, IconButton, Stack, useStyles2 } from '@grafana/ui';
 import { EditableTable } from './components';
 import { ColumnDef } from '@tanstack/react-table';
 
@@ -122,9 +122,9 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
       /**
        * Scale Values from dataFrame
        */
-      const metricValues = timescalesFrame.fields.find((field) => field.name === 'metric')?.values?.toArray() || [];
-      const minValues = timescalesFrame.fields.find((field) => field.name === 'min')?.values?.toArray() || [];
-      const maxValues = timescalesFrame.fields.find((field) => field.name === 'max')?.values?.toArray() || [];
+      const metricValues = timescalesFrame.fields.find((field) => field.name === 'metric')?.values || [];
+      const minValues = timescalesFrame.fields.find((field) => field.name === 'min')?.values || [];
+      const maxValues = timescalesFrame.fields.find((field) => field.name === 'max')?.values || [];
 
       /**
        * Scale Values Map
@@ -197,10 +197,10 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
         {...otherProps}
       >
         <div className={styles.header}>
-          <HorizontalGroup justify={'space-between'} align={'center'}>
+          <Stack justifyContent={'space-between'} alignItems={'center'}>
             <div className={styles.title}>Set Custom scales</div>
             <IconButton name="times" aria-label="Close" onClick={onDismiss} />
-          </HorizontalGroup>
+          </Stack>
         </div>
         {editableTableData && (
           <div className={styles.table} style={{ width: size.width, maxHeight: size.height }}>
@@ -235,7 +235,7 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
           </div>
         )}
         <div className={styles.footer}>
-          <HorizontalGroup justify={'flex-end'}>
+          <Stack justifyContent={'flex-end'}>
             <Button
               size={'sm'}
               variant="secondary"
@@ -259,7 +259,7 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
             <Button size={'sm'} type={'submit'} disabled={isLoading} onClick={onUpdateScales}>
               {isLoading ? 'Saving' : 'Save'}
             </Button>
-          </HorizontalGroup>
+          </Stack>
         </div>
       </div>
     );
@@ -278,7 +278,6 @@ TimescaleEditorForm.displayName = 'TimescaleEditorForm';
 const getStyles = (theme: GrafanaTheme2) => {
   return {
     backdrop: css`
-      label: backdrop;
       position: fixed;
       top: 0;
       left: 0;
@@ -292,7 +291,7 @@ const getStyles = (theme: GrafanaTheme2) => {
       box-shadow: ${theme.shadows.z3};
       z-index: ${theme.zIndex.dropdown};
       border: 1px solid ${theme.colors.border.weak};
-      border-radius: ${theme.shape.borderRadius()};
+      border-radius: ${theme.shape.radius.default};
       width: 460px;
     `,
     header: css`

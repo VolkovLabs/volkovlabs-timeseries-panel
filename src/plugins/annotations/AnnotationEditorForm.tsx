@@ -4,7 +4,7 @@ import useAsyncFn from 'react-use/lib/useAsyncFn';
 import useClickAway from 'react-use/lib/useClickAway';
 
 import { AnnotationEventUIModel, GrafanaTheme2 } from '@grafana/data';
-import { Button, Field, Form, HorizontalGroup, InputControl, TextArea, usePanelContext, useStyles2 } from '@grafana/ui';
+import { Button, Field, Form, InputControl, Stack, TextArea, usePanelContext, useStyles2 } from '@grafana/ui';
 import { TagFilter } from 'app/core/components/TagFilter/TagFilter';
 import { getAnnotationTags } from 'app/features/annotations/api';
 
@@ -73,10 +73,10 @@ export const AnnotationEditorForm = React.forwardRef<HTMLDivElement, AnnotationE
         {...otherProps}
       >
         <div className={styles.header}>
-          <HorizontalGroup justify={'space-between'} align={'center'}>
+          <Stack justifyContent={'space-between'} alignItems={'center'}>
             <div className={styles.title}>Add annotation</div>
             <div className={styles.ts}>{ts}</div>
-          </HorizontalGroup>
+          </Stack>
         </div>
         <div className={styles.editorForm}>
           <Form<AnnotationEditFormDTO>
@@ -110,14 +110,14 @@ export const AnnotationEditorForm = React.forwardRef<HTMLDivElement, AnnotationE
                       }}
                     />
                   </Field>
-                  <HorizontalGroup justify={'flex-end'}>
+                  <Stack justifyContent={'flex-end'}>
                     <Button size={'sm'} variant="secondary" onClick={onDismiss} fill="outline">
                       Cancel
                     </Button>
                     <Button size={'sm'} type={'submit'} disabled={stateIndicator?.loading}>
                       {stateIndicator?.loading ? 'Saving' : 'Save'}
                     </Button>
-                  </HorizontalGroup>
+                  </Stack>
                 </>
               );
             }}
@@ -159,7 +159,7 @@ const getStyles = (theme: GrafanaTheme2) => {
       box-shadow: ${theme.shadows.z3};
       z-index: ${theme.zIndex.dropdown};
       border: 1px solid ${theme.colors.border.weak};
-      border-radius: ${theme.shape.borderRadius()};
+      border-radius: ${theme.shape.radius.default};
       width: 460px;
     `,
     editorForm: css`

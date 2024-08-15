@@ -1,10 +1,10 @@
-import { Field, MutableDataFrame } from '@grafana/data';
+import { Field, toDataFrame } from '@grafana/data';
 import { UPlotConfigBuilder } from '@grafana/ui';
 
 import { getVisibleLabels, VisibleExemplarLabels } from './ExemplarsPlugin';
 
 describe('getVisibleLabels()', () => {
-  const dataFrameSeries1 = new MutableDataFrame({
+  const dataFrameSeries1 = toDataFrame({
     name: 'tns/app',
     fields: [
       {
@@ -22,7 +22,7 @@ describe('getVisibleLabels()', () => {
     ] as unknown as Field[],
     length: 4,
   });
-  const dataFrameSeries2 = new MutableDataFrame({
+  const dataFrameSeries2 = toDataFrame({
     name: 'tns/db',
     fields: [
       {
@@ -40,7 +40,7 @@ describe('getVisibleLabels()', () => {
     ] as unknown as Field[],
     length: 4,
   });
-  const dataFrameSeries3 = new MutableDataFrame({
+  const dataFrameSeries3 = toDataFrame({
     name: 'tns/loadgen',
     fields: [
       {

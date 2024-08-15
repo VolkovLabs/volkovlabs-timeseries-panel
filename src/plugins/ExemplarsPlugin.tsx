@@ -7,8 +7,8 @@ import {
   Labels,
   TIME_SERIES_TIME_FIELD_NAME,
   TIME_SERIES_VALUE_FIELD_NAME,
-  TimeZone,
 } from '@grafana/data';
+import { TimeZone } from '@grafana/schema';
 import { EventsCanvas, FIXED_UNIT, UPlotConfigBuilder } from '@grafana/ui';
 
 import { ExemplarMarker } from './ExemplarMarker';

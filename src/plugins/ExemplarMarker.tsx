@@ -32,7 +32,6 @@ interface ExemplarMarkerProps {
 }
 
 export const ExemplarMarker = ({
-  timeZone,
   dataFrame,
   dataFrameFieldIndex,
   config,
@@ -249,7 +248,7 @@ const getExemplarMarkerStyles = (theme: GrafanaTheme2) => {
     wrapper: css({
       background: bg,
       border: `1px solid ${headerBg}`,
-      borderRadius: theme.shape.borderRadius(2),
+      borderRadius: theme.shape.radius.default,
       boxShadow: `0 0 20px ${shadowColor}`,
       padding: theme.spacing(1),
     }),
@@ -302,7 +301,7 @@ const getExemplarMarkerStyles = (theme: GrafanaTheme2) => {
     }),
     body: css({
       fontWeight: theme.typography.fontWeightMedium,
-      borderRadius: theme.shape.borderRadius(2),
+      borderRadius: theme.shape.radius.default,
       overflow: 'hidden',
     }),
     marble: css({

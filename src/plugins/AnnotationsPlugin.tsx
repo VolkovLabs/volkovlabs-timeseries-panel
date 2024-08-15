@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import uPlot from 'uplot';
 
-import { colorManipulator, DataFrame, DataFrameFieldIndex, DataFrameView, TimeZone } from '@grafana/data';
+import { colorManipulator, DataFrame, DataFrameFieldIndex, DataFrameView } from '@grafana/data';
+import { TimeZone } from '@grafana/schema';
 import { EventsCanvas, UPlotConfigBuilder, useTheme2 } from '@grafana/ui';
 
 import { AnnotationMarker } from './annotations/AnnotationMarker';
