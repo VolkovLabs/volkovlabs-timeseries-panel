@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { FieldOverrideEditorProps, rangeUtil, SelectableValue } from '@grafana/data';
-import { HorizontalGroup, Input, RadioButtonGroup } from '@grafana/ui';
+import { rangeUtil, SelectableValue, StandardEditorProps } from '@grafana/data';
+import { Input, RadioButtonGroup, Stack } from '@grafana/ui';
 
 const GAPS_OPTIONS: Array<SelectableValue<boolean | number>> = [
   {
@@ -18,7 +18,7 @@ const GAPS_OPTIONS: Array<SelectableValue<boolean | number>> = [
   },
 ];
 
-type Props = FieldOverrideEditorProps<boolean | number, unknown>;
+type Props = StandardEditorProps<boolean | number, { isTime: boolean }>;
 
 export const SpanNullsEditor = ({ value, onChange }: Props) => {
   const isThreshold = typeof value === 'number';
@@ -49,7 +49,7 @@ export const SpanNullsEditor = ({ value, onChange }: Props) => {
   };
 
   return (
-    <HorizontalGroup>
+    <Stack>
       <RadioButtonGroup value={value} options={GAPS_OPTIONS} onChange={onChange} />
       {isThreshold && (
         <Input
@@ -63,6 +63,6 @@ export const SpanNullsEditor = ({ value, onChange }: Props) => {
           spellCheck={false}
         />
       )}
-    </HorizontalGroup>
+    </Stack>
   );
 };

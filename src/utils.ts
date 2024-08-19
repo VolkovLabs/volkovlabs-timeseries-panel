@@ -7,7 +7,6 @@ import {
   GrafanaTheme2,
   InterpolateFunction,
   isBooleanUnit,
-  SortedVector,
   TimeRange,
 } from '@grafana/data';
 import { convertFieldType } from 'app/core/utils/convertFieldType';
@@ -197,13 +196,7 @@ export function regenerateLinksSupplier(
     const tempFields: Field[] = [];
     for (const frameField of frames[field.state?.origin?.frameIndex].fields) {
       if (frameField.type === FieldType.string) {
-        if (field.values instanceof SortedVector) {
-          const copiedField = { ...frameField };
-          copiedField.values = new SortedVector(frameField.values, field.values.getOrderArray());
-          tempFields.push(copiedField);
-        } else {
-          tempFields.push(frameField);
-        }
+        tempFields.push(frameField);
       }
     }
 

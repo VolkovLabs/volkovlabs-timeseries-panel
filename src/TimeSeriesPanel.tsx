@@ -1,7 +1,6 @@
 import { config } from 'app/core/config';
-import { getFieldLinksForExplore } from 'app/features/explore/utils/links';
 import React, { useCallback, useMemo, useState } from 'react';
-import { CartesianCoords2D, DataFrame, DataFrameType, Field, PanelProps, toDataFrame } from '@grafana/data';
+import { CartesianCoords2D, DataFrame, DataFrameType, PanelProps, toDataFrame } from '@grafana/data';
 import { getAppEvents, getBackendSrv, PanelDataErrorView } from '@grafana/runtime';
 import { TooltipDisplayMode } from '@grafana/schema';
 import { KeyboardPlugin, MenuItemProps, TimeSeries, TooltipPlugin, usePanelContext, ZoomPlugin } from '@grafana/ui';
@@ -33,12 +32,7 @@ export const TimeSeriesPanel = ({
   id,
   eventBus,
 }: TimeSeriesPanelProps) => {
-  const { sync, canAddAnnotations, onThresholdsChange, canEditThresholds, showThresholds, onSplitOpen } =
-    usePanelContext();
-
-  const getFieldLinks = (field: Field, rowIndex: number) => {
-    return getFieldLinksForExplore({ field, rowIndex, splitOpenFn: onSplitOpen, range: timeRange });
-  };
+  const { sync, canAddAnnotations, onThresholdsChange, canEditThresholds, showThresholds } = usePanelContext();
 
   const [isAddingTimescale, setAddingTimescale] = useState(false);
   const [timescaleTriggerCoords, setTimescaleTriggerCoords] = useState<{
@@ -212,7 +206,7 @@ export const TimeSeriesPanel = ({
                 label: 'Custom scales',
                 ariaLabel: 'Custom scales',
                 icon: 'channel-add',
-                onClick: (e, p) => {
+                onClick: (e, p: any) => {
                   setTimescaleTriggerCoords(p.coords);
                   setAddingTimescale(true);
                   getTimescales();
@@ -305,7 +299,6 @@ export const TimeSeriesPanel = ({
                 config={config}
                 exemplars={data.annotations}
                 timeZone={timeZone}
-                getFieldLinks={getFieldLinks}
               />
             )}
             {((canEditThresholds && onThresholdsChange) || showThresholds) && (

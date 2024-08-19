@@ -4,17 +4,15 @@ import { v4 as uuidv4 } from 'uuid';
 
 import {
   CoreApp,
-  DataQuery,
   DataSourceApi,
-  DataSourceRef,
   IntervalValues,
   LogsDedupStrategy,
   LogsSortOrder,
   rangeUtil,
   RawTimeRange,
   TimeRange,
-  TimeZone,
 } from '@grafana/data';
+import { DataQuery, DataSourceRef, TimeZone } from '@grafana/schema';
 import { getDataSourceSrv } from '@grafana/runtime';
 import { RefreshPicker } from '@grafana/ui';
 

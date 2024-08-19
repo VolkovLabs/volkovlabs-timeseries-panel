@@ -2,7 +2,7 @@ import { css } from '@emotion/css';
 import React from 'react';
 
 import { GrafanaTheme2, textUtil } from '@grafana/data';
-import { HorizontalGroup, IconButton, Tag, useStyles2 } from '@grafana/ui';
+import { IconButton, Stack, Tag, useStyles2 } from '@grafana/ui';
 import alertDef from 'app/features/alerting/state/alertDef';
 
 import { AnnotationsDataFrameViewDTO } from '../types';
@@ -56,8 +56,8 @@ export const AnnotationTooltip = ({
   if (canEdit || canDelete) {
     editControls = (
       <div className={styles.editControls}>
-        {canEdit && <IconButton name={'pen'} size={'sm'} onClick={onEdit} />}
-        {canDelete && <IconButton name={'trash-alt'} size={'sm'} onClick={onDelete} />}
+        {canEdit && <IconButton name={'pen'} size={'sm'} onClick={onEdit} aria-label="Edit" />}
+        {canDelete && <IconButton name={'trash-alt'} size={'sm'} onClick={onDelete} aria-label="Delete" />}
       </div>
     );
   }
@@ -65,7 +65,7 @@ export const AnnotationTooltip = ({
   return (
     <div className={styles.wrapper}>
       <div className={styles.header}>
-        <HorizontalGroup justify={'space-between'} align={'center'} spacing={'md'}>
+        <Stack justifyContent={'space-between'} alignItems={'center'} gap={2}>
           <div className={styles.meta}>
             <span>
               {avatar}
@@ -74,16 +74,16 @@ export const AnnotationTooltip = ({
             {ts}
           </div>
           {editControls}
-        </HorizontalGroup>
+        </Stack>
       </div>
 
       <div className={styles.body}>
         {text && <div dangerouslySetInnerHTML={{ __html: textUtil.sanitize(text) }} />}
         {alertText}
         <>
-          <HorizontalGroup spacing="xs" wrap>
+          <Stack gap={1} wrap="wrap">
             {tags?.map((t, i) => <Tag name={t} key={`${t}-${i}`} />)}
-          </HorizontalGroup>
+          </Stack>
         </>
       </div>
     </div>

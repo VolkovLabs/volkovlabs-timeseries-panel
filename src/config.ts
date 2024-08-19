@@ -11,8 +11,8 @@ import {
   GraphDrawStyle,
   GraphFieldConfig,
   GraphGradientMode,
+  GraphThresholdsStyleMode,
   GraphTransform,
-  GraphTresholdsStyleMode,
   LineInterpolation,
   LineStyle,
   StackingMode,
@@ -210,7 +210,7 @@ export function getGraphFieldConfig(cfg: GraphFieldConfig): SetFieldConfigOption
         path: 'thresholdsStyle',
         name: 'Show thresholds',
         category: ['Thresholds'],
-        defaultValue: { mode: GraphTresholdsStyleMode.Off },
+        defaultValue: { mode: GraphThresholdsStyleMode.Off },
         settings: {
           options: graphFieldOptions.thresholdsDisplayModes,
         },
