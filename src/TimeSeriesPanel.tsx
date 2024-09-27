@@ -241,9 +241,14 @@ export const TimeSeriesPanel = ({
                   return (
                     <ContextMenuPlugin
                       data={alignedDataFrame}
+                      tooltipMode={options.tooltip.mode}
+                      sortOrder={options.tooltip.sort}
                       config={config}
                       timeZone={timeZone}
                       replaceVariables={replaceVariables}
+                      eventBus={eventBus}
+                      width={width}
+                      height={height}
                       defaultItems={[
                         {
                           items: [
@@ -271,7 +276,12 @@ export const TimeSeriesPanel = ({
                 data={alignedDataFrame}
                 frames={frames}
                 config={config}
+                width={width}
+                height={height}
+                tooltipMode={options.tooltip.mode}
+                sortOrder={options.tooltip.sort}
                 timeZone={timeZone}
+                eventBus={eventBus}
                 replaceVariables={replaceVariables}
                 defaultItems={[
                   {
