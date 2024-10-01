@@ -62,10 +62,6 @@ export const ContextMenuPlugin = ({
   const [point, setPoint] = useState<ContextMenuSelectionPoint | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [pinnedPoints, setPinnedPoints] = useState<ContextMenuSelectionItems>([]);
-  const [panelSizes, setPanelSizes] = useState({
-    width,
-    height,
-  });
 
   /**
    * Dashboard refs
@@ -138,15 +134,13 @@ export const ContextMenuPlugin = ({
     return () => {};
   }, [coords, pinnedPoints.length, point]);
 
+  /**
+   * Clear pinned points on panel size change
+   */
   useEffect(() => {
-    if (panelSizes.height !== height || panelSizes.width !== width) {
-      setPinnedPoints([]);
-      setPanelSizes({
-        height,
-        width,
-      });
-    }
-  }, [height, panelSizes.height, panelSizes.width, width]);
+    setPinnedPoints([]);
+  }, [height, width]);
+
   // Add uPlot hooks to the config, or re-add when the config changed
   useLayoutEffect(() => {
     let bbox: DOMRect | undefined = undefined;
