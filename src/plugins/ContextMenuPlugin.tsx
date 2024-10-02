@@ -1,25 +1,29 @@
 import { css as cssCore, Global } from '@emotion/react';
-import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useClickAway } from 'react-use';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { CartesianCoords2D, DataFrame, EventBus, InterpolateFunction } from '@grafana/data';
+import { SortOrder, TimeZone, TooltipDisplayMode } from '@grafana/schema';
 
-import { CartesianCoords2D, DataFrame, getFieldDisplayName, InterpolateFunction } from '@grafana/data';
-import { TimeZone } from '@grafana/schema';
-import {
-  ContextMenu,
-  GraphContextMenuHeader,
-  MenuGroup,
-  MenuItem,
-  MenuItemProps,
-  MenuItemsGroup,
-  UPlotConfigBuilder,
-} from '@grafana/ui';
+import { MenuItemsGroup, UPlotConfigBuilder } from '@grafana/ui';
+import { TimeRangeUpdatedEvent } from '@grafana/runtime';
+import { ContextMenuView } from './ContextMenuView';
 
-type ContextMenuSelectionCoords = { viewport: CartesianCoords2D; plotCanvas: CartesianCoords2D };
-type ContextMenuSelectionPoint = { seriesIdx: number | null; dataIdx: number | null };
+export type ContextMenuSelectionCoords = { viewport: CartesianCoords2D; plotCanvas: CartesianCoords2D };
+export type ContextMenuSelectionPoint = {
+  seriesIdx: number | null;
+  dataIdx: number | null;
+  focusedPoints: Array<number | null>;
+};
 
 export interface ContextMenuItemClickPayload {
   coords: ContextMenuSelectionCoords;
 }
+
+export type ContextMenuSelectionItem = {
+  point?: ContextMenuSelectionPoint | null;
+  coords: ContextMenuSelectionCoords;
+};
+
+export type ContextMenuSelectionItems = ContextMenuSelectionItem[];
 
 interface ContextMenuPluginProps {
   data: DataFrame;
@@ -27,6 +31,11 @@ interface ContextMenuPluginProps {
   config: UPlotConfigBuilder;
   defaultItems?: Array<MenuItemsGroup<ContextMenuItemClickPayload>>;
   timeZone: TimeZone;
+  tooltipMode?: TooltipDisplayMode;
+  eventBus: EventBus;
+  sortOrder: SortOrder;
+  width: number;
+  height: number;
   onOpen?: () => void;
   onClose?: () => void;
   replaceVariables?: InterpolateFunction;
@@ -37,13 +46,27 @@ export const ContextMenuPlugin = ({
   config,
   onClose,
   timeZone,
+  sortOrder,
+  width,
+  height,
+  eventBus,
   replaceVariables,
+  tooltipMode,
   ...otherProps
 }: ContextMenuPluginProps) => {
+  /**
+   * State
+   */
   const plotCanvas = useRef<HTMLDivElement>();
   const [coords, setCoords] = useState<ContextMenuSelectionCoords | null>(null);
   const [point, setPoint] = useState<ContextMenuSelectionPoint | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [pinnedPoints, setPinnedPoints] = useState<ContextMenuSelectionItems>([]);
+
+  /**
+   * Dashboard refs
+   */
+  const dashboardScrollViewRef = useRef<HTMLDivElement | null>(null);
 
   const openMenu = useCallback(() => {
     setIsOpen(true);
@@ -54,9 +77,69 @@ export const ContextMenuPlugin = ({
   }, [setIsOpen]);
 
   const clearSelection = useCallback(() => {
-    console.log('ContextMenuPlugin', false, 'clearing click selection');
     setPoint(null);
   }, [setPoint]);
+
+  useEffect(() => {
+    /**
+     * Update pinned points on TimeRangeUpdatedEvent
+     */
+    const subscriber = eventBus.getStream(TimeRangeUpdatedEvent).subscribe(() => {
+      setPinnedPoints([]);
+    });
+
+    return () => {
+      subscriber.unsubscribe();
+    };
+  }, [eventBus]);
+
+  useLayoutEffect(() => {
+    /**
+     * Set scrollbar view element
+     * Several scrollbar view elements exist
+     * We have to specify particular element
+     */
+    if (!dashboardScrollViewRef.current) {
+      dashboardScrollViewRef.current = document.querySelector('.main-view .scrollbar-view');
+    }
+
+    const handleScroll = () => {
+      /**
+       * Clear pinned points
+       */
+      if (!!pinnedPoints.length) {
+        setPinnedPoints([]);
+      }
+
+      /**
+       * Clear current point
+       */
+      if (!!coords && !!point) {
+        setPoint(null);
+        setCoords(null);
+      }
+    };
+
+    /**
+     * Listen for Scroll events
+     */
+    if (dashboardScrollViewRef.current) {
+      dashboardScrollViewRef.current.addEventListener('scroll', handleScroll);
+
+      return () => {
+        dashboardScrollViewRef.current?.removeEventListener('scroll', handleScroll);
+      };
+    }
+
+    return () => {};
+  }, [coords, pinnedPoints.length, point]);
+
+  /**
+   * Clear pinned points on panel size change
+   */
+  useEffect(() => {
+    setPinnedPoints([]);
+  }, [height, width]);
 
   // Add uPlot hooks to the config, or re-add when the config changed
   useLayoutEffect(() => {
@@ -95,7 +178,6 @@ export const ContextMenuPlugin = ({
       plotCanvas.current = canvas || undefined;
       plotCanvas.current?.addEventListener('mousedown', onMouseCapture);
 
-      console.log('ContextMenuPlugin', false, 'init');
       // for naive click&drag check
       let isClick = false;
 
@@ -121,11 +203,9 @@ export const ContextMenuPlugin = ({
 
         if (e.target instanceof HTMLElement) {
           if (!e.target.classList.contains('u-cursor-pt')) {
-            console.log('ContextMenuPlugin', false, 'canvas click');
-            setPoint({ seriesIdx: null, dataIdx: null });
+            setPoint({ seriesIdx: null, dataIdx: null, focusedPoints: [] });
           }
         }
-
         openMenu();
       });
 
@@ -135,13 +215,16 @@ export const ContextMenuPlugin = ({
           pt.addEventListener('click', () => {
             const seriesIdx = i + 1;
             const dataIdx = u.cursor.idx;
-            console.log('ContextMenuPlugin', false, seriesIdx, dataIdx);
-            setPoint({ seriesIdx, dataIdx: dataIdx ?? null });
+            setPoint({
+              seriesIdx,
+              dataIdx: dataIdx ?? null,
+              focusedPoints: u.legend.idxs!.slice(),
+            });
           });
         });
       }
     });
-  }, [config, openMenu, setCoords, setPoint]);
+  }, [config, openMenu, pinnedPoints, setCoords, setPoint]);
 
   const defaultItems = useMemo(() => {
     return otherProps.defaultItems
@@ -165,6 +248,16 @@ export const ContextMenuPlugin = ({
       : [];
   }, [coords, otherProps.defaultItems]);
 
+  /**
+   * Available Pinned Points except current selected point
+   */
+  const availablePinnedPoints = useMemo(() => {
+    return pinnedPoints.filter(
+      (pinPoint) =>
+        pinPoint.point?.dataIdx !== point?.dataIdx || !pinPoint.point?.focusedPoints.includes(point?.dataIdx || null)
+    );
+  }, [pinnedPoints, point]);
+
   return (
     <>
       <Global
@@ -176,10 +269,15 @@ export const ContextMenuPlugin = ({
       />
       {isOpen && coords && (
         <ContextMenuView
+          key={point?.dataIdx}
+          pinnedPoints={pinnedPoints}
+          setPinnedPoints={setPinnedPoints}
           data={data}
+          sortOrder={sortOrder}
           frames={otherProps.frames}
           defaultItems={defaultItems}
           timeZone={timeZone}
+          tooltipMode={tooltipMode}
           selection={{ point, coords }}
           replaceVariables={replaceVariables}
           onClose={() => {
@@ -191,120 +289,21 @@ export const ContextMenuPlugin = ({
           }}
         />
       )}
-    </>
-  );
-};
-
-interface ContextMenuViewProps {
-  data: DataFrame;
-  frames?: DataFrame[];
-  defaultItems?: MenuItemsGroup[];
-  timeZone: TimeZone;
-  onClose?: () => void;
-  selection: {
-    point?: { seriesIdx: number | null; dataIdx: number | null } | null;
-    coords: { plotCanvas: CartesianCoords2D; viewport: CartesianCoords2D };
-  };
-  replaceVariables?: InterpolateFunction;
-}
-
-export const ContextMenuView = ({
-  selection,
-  timeZone,
-  defaultItems,
-  replaceVariables,
-  data,
-  ...otherProps
-}: ContextMenuViewProps) => {
-  const ref = useRef(null);
-
-  const onClose = () => {
-    if (otherProps.onClose) {
-      otherProps.onClose();
-    }
-  };
-
-  useClickAway(ref, () => {
-    onClose();
-  });
-
-  const xField = data.fields[0];
-
-  if (!xField) {
-    return null;
-  }
-  const items = defaultItems ? [...defaultItems] : [];
-  let renderHeader: () => React.JSX.Element | null = () => null;
-
-  if (selection.point) {
-    const { seriesIdx, dataIdx } = selection.point;
-    const xFieldFmt = xField.display!;
-
-    if (seriesIdx && dataIdx !== null) {
-      const field = data.fields[seriesIdx];
-
-      const displayValue = field.display!(field.values[dataIdx]);
-
-      const hasLinks = field.config.links && field.config.links.length > 0;
-
-      if (hasLinks) {
-        if (field.getLinks) {
-          items.push({
-            items: field
-              .getLinks({
-                valueRowIndex: dataIdx,
-              })
-              .map<MenuItemProps>((link) => {
-                return {
-                  label: link.title,
-                  ariaLabel: link.title,
-                  url: link.href,
-                  target: link.target,
-                  icon: link.target === '_self' ? 'link' : 'external-link-alt',
-                  onClick: link.onClick,
-                };
-              }),
-          });
-        }
-      }
-
-      // eslint-disable-next-line react/display-name
-      renderHeader = () => (
-        <GraphContextMenuHeader
-          timestamp={xFieldFmt(xField.values[dataIdx]).text}
-          displayValue={displayValue}
-          seriesColor={displayValue.color!}
-          displayName={getFieldDisplayName(field, data, otherProps.frames)}
+      {availablePinnedPoints.map((pin) => (
+        <ContextMenuView
+          key={pin.point?.dataIdx}
+          pinnedPoints={pinnedPoints}
+          setPinnedPoints={setPinnedPoints}
+          data={data}
+          sortOrder={sortOrder}
+          frames={otherProps.frames}
+          defaultItems={defaultItems}
+          tooltipMode={tooltipMode}
+          timeZone={timeZone}
+          replaceVariables={replaceVariables}
+          selection={pin}
         />
-      );
-    }
-  }
-
-  const renderMenuGroupItems = () => {
-    return items?.map((group, index) => (
-      <MenuGroup key={`${group.label}${index}`} label={group.label}>
-        {(group.items || []).map((item) => (
-          <MenuItem
-            key={item.label}
-            url={item.url}
-            label={item.label}
-            target={item.target}
-            icon={item.icon}
-            active={item.active}
-            onClick={item.onClick}
-          />
-        ))}
-      </MenuGroup>
-    ));
-  };
-
-  return (
-    <ContextMenu
-      renderMenuItems={renderMenuGroupItems}
-      renderHeader={renderHeader}
-      x={selection.coords.viewport.x}
-      y={selection.coords.viewport.y}
-      onClose={onClose}
-    />
+      ))}
+    </>
   );
 };
