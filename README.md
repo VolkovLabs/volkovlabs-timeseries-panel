@@ -1,6 +1,6 @@
 # Time Series panel for Grafana
 
-![Grafana 10](https://img.shields.io/badge/Grafana-10.0-orange)
+![Grafana](https://img.shields.io/badge/Grafana-11.0-orange)
 ![CI](https://github.com/volkovlabs/volkovlabs-timeseries-panel/workflows/CI/badge.svg)
 ![E2E](https://github.com/volkovlabs/volkovlabs-timeseries-panel/workflows/E2E/badge.svg)
 [![CodeQL](https://github.com/VolkovLabs/volkovlabs-timeseries-panel/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/VolkovLabs/volkovlabs-timeseries-panel/actions/workflows/codeql-analysis.yml)

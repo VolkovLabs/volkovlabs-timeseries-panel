@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.4.0 (2024-10-01)
+
+### Features / Enhancements
+
+- Added pin for points (#16)
+
 ## 1.3.0 (2024-08-19)
 
 ### Features / Enhancements
