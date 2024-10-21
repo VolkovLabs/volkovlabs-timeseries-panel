@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useReducer, useRef } from 'react';
 import uPlot from 'uplot';
 
 import { colorManipulator, DataFrame, DataFrameFieldIndex, DataFrameView } from '@grafana/data';
@@ -19,6 +19,8 @@ export const AnnotationsPlugin = ({ annotations, timeZone, config }: Annotations
   const plotInstance = useRef<uPlot>();
 
   const annotationsRef = useRef<Array<DataFrameView<AnnotationsDataFrameViewDTO>>>();
+
+  const [_, forceUpdate] = useReducer((x) => x + 1, 0);
 
   // Update annotations views when new annotations came
   useEffect(() => {
@@ -99,6 +101,20 @@ export const AnnotationsPlugin = ({ annotations, timeZone, config }: Annotations
       return;
     });
   }, [config, theme]);
+
+  // ensure annos are re-drawn whenever they change
+  useEffect(() => {
+    if (plotInstance.current) {
+      plotInstance.current.redraw();
+
+      // this forces a second redraw after uPlot is updated (in the Plot.tsx didUpdate) with new data/scales
+      // and ensures the anno marker positions in the dom are re-rendered in correct places
+      // (this is temp fix until uPlot integrtion is refactored)
+      setTimeout(() => {
+        forceUpdate();
+      }, 0);
+    }
+  }, [annotations]);
 
   const mapAnnotationToXYCoords = useCallback((frame: DataFrame, dataFrameFieldIndex: DataFrameFieldIndex) => {
     const view = new DataFrameView<AnnotationsDataFrameViewDTO>(frame);

@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.5.0 (2024-10-21)
+
+### Features / Enhancements
+
+- Fix annotations refresh (#17)
+
 ## 1.4.0 (2024-10-01)
 
 ### Features / Enhancements
