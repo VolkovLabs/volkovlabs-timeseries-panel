@@ -1,7 +1,7 @@
 import { isNumber } from 'lodash';
 import uPlot from 'uplot';
 
-import { UPlotConfigBuilder, UPlotConfigPrepFn } from '@grafana/ui';
+import { buildScaleKey, UPlotConfigBuilder, UPlotConfigPrepFn } from '@grafana/ui';
 import {
   DataFrame,
   DecimalCount,
@@ -14,7 +14,6 @@ import {
   getFieldDisplayName,
   getFieldSeriesColor,
 } from '@grafana/data';
-// eslint-disable-next-line import/order
 import {
   AxisColorMode,
   AxisPlacement,
@@ -61,7 +60,6 @@ for (let i = 0; i < BIN_INCRS.length; i++) {
 }
 
 import { getScaleGradientFn } from '@grafana/ui/src/components/uPlot/config/gradientFills';
-import { buildScaleKey } from '@grafana/ui';
 import { getStackingGroups, preparePlotData2 } from '@grafana/ui/src/components/uPlot/utils';
 
 const defaultFormatter = (v: any, decimals: DecimalCount = 1) => (v == null ? '-' : v.toFixed(decimals));
