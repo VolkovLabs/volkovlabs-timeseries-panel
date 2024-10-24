@@ -1,7 +1,7 @@
 import { css } from '@emotion/css';
 import React, { ReactNode } from 'react';
 
-import { DataFrame, Field, FieldType, formattedValueToString } from '@grafana/data';
+import { DataFrame, Field, FieldType, formattedValueToString, GrafanaTheme2 } from '@grafana/data';
 import { SortOrder, TooltipDisplayMode } from '@grafana/schema/dist/esm/common/common.gen';
 import { useStyles2 } from '@grafana/ui';
 import { VizTooltipContent } from '@grafana/ui/src/components/VizTooltip/VizTooltipContent';
@@ -36,6 +36,11 @@ export interface TimeSeriesTooltipProps {
 
   annotate?: () => void;
   maxHeight?: number;
+
+  /**
+   * Footer Content
+   */
+  footerContent?: ReactNode;
 }
 
 export const TimeSeriesTooltip = ({
@@ -48,6 +53,7 @@ export const TimeSeriesTooltip = ({
   isPinned,
   annotate,
   maxHeight,
+  footerContent = null,
 }: TimeSeriesTooltipProps) => {
   const styles = useStyles2(getStyles);
 
@@ -80,7 +86,12 @@ export const TimeSeriesTooltip = ({
     const dataIdx = dataIdxs[seriesIdx]!;
     const links = getDataLinks(field, dataIdx);
 
-    footer = <VizTooltipFooter dataLinks={links} annotate={annotate} />;
+    footer = (
+      <>
+        <VizTooltipFooter dataLinks={links} annotate={annotate} />
+        {footerContent && <div className={styles.footerContent}>{footerContent}</div>}
+      </>
+    );
   }
 
   const headerItem: VizTooltipItem | null = xField.config.custom?.hideFrom?.tooltip
@@ -104,9 +115,13 @@ export const TimeSeriesTooltip = ({
   );
 };
 
-export const getStyles = () => ({
+export const getStyles = (theme: GrafanaTheme2) => ({
   wrapper: css({
     display: 'flex',
     flexDirection: 'column',
+  }),
+  footerContent: css({
+    borderTop: `1px solid ${theme.colors.border.medium}`,
+    padding: theme.spacing(1),
   }),
 });

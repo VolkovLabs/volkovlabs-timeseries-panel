@@ -1,30 +1,11 @@
 import { config } from 'app/core/config';
 import React, { useCallback, useMemo, useState } from 'react';
-import {
-  CartesianCoords2D,
-  DashboardCursorSync,
-  DataFrame,
-  DataFrameType,
-  PanelProps,
-  toDataFrame,
-  VizOrientation,
-} from '@grafana/data';
+import { DashboardCursorSync, DataFrame, DataFrameType, PanelProps, toDataFrame, VizOrientation } from '@grafana/data';
 import { getAppEvents, getBackendSrv, PanelDataErrorView } from '@grafana/runtime';
 import { TooltipDisplayMode } from '@grafana/schema';
-import {
-  EventBusPlugin,
-  KeyboardPlugin,
-  MenuItemProps,
-  TooltipPlugin,
-  TooltipPlugin2,
-  usePanelContext,
-  ZoomPlugin,
-} from '@grafana/ui';
+import { Button, EventBusPlugin, KeyboardPlugin, TooltipPlugin2, usePanelContext } from '@grafana/ui';
 import { TimeSeries } from 'app/core/components/TimeSeries/TimeSeries';
 import { Options } from './panelcfg.gen';
-import { AnnotationEditorPlugin } from './plugins/AnnotationEditorPlugin';
-import { AnnotationsPlugin } from './plugins/AnnotationsPlugin';
-import { ContextMenuPlugin } from './plugins/ContextMenuPlugin';
 import { ExemplarsPlugin, getVisibleLabels } from './plugins/ExemplarsPlugin';
 import { OutsideRangePlugin } from './plugins/OutsideRangePlugin';
 import { ThresholdControlsPlugin } from './plugins/ThresholdControlsPlugin';
@@ -32,7 +13,7 @@ import { TimescaleEditor } from './plugins/timescales/TimescaleEditor';
 import { TimescaleItem } from './plugins/timescales/TimescaleEditorForm';
 import { getPrepareTimeseriesSuggestion } from './suggestions';
 import { useRuntimeVariables } from './hooks';
-import { getTimezones, prepareGraphableFields, regenerateLinksSupplier } from './utils';
+import { getTimezones, prepareGraphableFields } from './utils';
 import { TimeRange2, TooltipHoverMode } from '@grafana/ui/src/components/uPlot/plugins/TooltipPlugin2';
 import { TimeSeriesTooltip } from './TimeSeriesTooltip';
 import { AnnotationsPlugin2 } from './plugins/AnnotationsPlugin2';
@@ -63,10 +44,7 @@ export const TimeSeriesPanel = ({
   } = usePanelContext();
 
   const [isAddingTimescale, setAddingTimescale] = useState(false);
-  const [timescaleTriggerCoords, setTimescaleTriggerCoords] = useState<{
-    viewport: CartesianCoords2D;
-    plotCanvas: CartesianCoords2D;
-  } | null>(null);
+  const [timescaleTriggerCoords, setTimescaleTriggerCoords] = useState<{ left: number; top: number } | null>(null);
 
   const isVerticallyOriented = options.orientation === VizOrientation.Vertical;
   const frames = useMemo(() => prepareGraphableFields(data.series, config.theme2, timeRange), [data.series, timeRange]);
@@ -273,6 +251,27 @@ export const TimeSeriesPanel = ({
                       isPinned={isPinned}
                       annotate={enableAnnotationCreation ? annotate : undefined}
                       maxHeight={options.tooltip.maxHeight}
+                      footerContent={
+                        <>
+                          <Button
+                            icon="channel-add"
+                            variant="secondary"
+                            size="sm"
+                            id="custom-scales"
+                            onClick={() => {
+                              setTimescaleTriggerCoords({
+                                left: u.rect.left + (u.cursor.left ?? 0),
+                                top: u.rect.top + (u.cursor.top ?? 0),
+                              });
+                              setAddingTimescale(true);
+                              getTimescales();
+                              dismiss();
+                            }}
+                          >
+                            Custom scales
+                          </Button>
+                        </>
+                      }
                     />
                   );
                 }}
@@ -305,6 +304,19 @@ export const TimeSeriesPanel = ({
                   />
                 )}
               </>
+            )}
+            {isAddingTimescale && (
+              <TimescaleEditor
+                onSave={onUpsertTimescales}
+                onDismiss={() => setAddingTimescale(false)}
+                scales={scales}
+                style={{
+                  position: 'absolute',
+                  left: timescaleTriggerCoords?.left,
+                  top: timescaleTriggerCoords?.top,
+                }}
+                timescalesFrame={timescalesFrame}
+              />
             )}
           </>
         );
