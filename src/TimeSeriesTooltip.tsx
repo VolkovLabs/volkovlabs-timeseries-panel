@@ -38,6 +38,11 @@ export interface TimeSeriesTooltipProps {
   maxHeight?: number;
 
   /**
+   * Header Content
+   */
+  headerContent?: ReactNode;
+
+  /**
    * Footer Content
    */
   footerContent?: ReactNode;
@@ -53,6 +58,7 @@ export const TimeSeriesTooltip = ({
   isPinned,
   annotate,
   maxHeight,
+  headerContent = null,
   footerContent = null,
 }: TimeSeriesTooltipProps) => {
   const styles = useStyles2(getStyles);
@@ -103,6 +109,7 @@ export const TimeSeriesTooltip = ({
 
   return (
     <div className={styles.wrapper}>
+      {isPinned && headerContent}
       {headerItem != null && <VizTooltipHeader item={headerItem} isPinned={isPinned} />}
       <VizTooltipContent
         items={contentItems}
