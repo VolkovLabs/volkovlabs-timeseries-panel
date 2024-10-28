@@ -5,10 +5,12 @@ import tinycolor from 'tinycolor2';
 import uPlot from 'uplot';
 
 import { arrayToDataFrame, colorManipulator, DataFrame, DataTopic } from '@grafana/data';
+import { getTemplateSrv } from '@grafana/runtime';
 import { TimeZone } from '@grafana/schema';
 import { DEFAULT_ANNOTATION_COLOR, getPortalContainer, UPlotConfigBuilder, useStyles2, useTheme2 } from '@grafana/ui';
 
 import { AnnotationMarker2 } from './annotations2/AnnotationMarker2';
+import { Options } from '../panelcfg.gen';
 
 // (copied from TooltipPlugin2)
 interface TimeRange2 {
@@ -23,6 +25,7 @@ interface AnnotationsPluginProps {
   newRange: TimeRange2 | null;
   setNewRange: (newRage: TimeRange2 | null) => void;
   canvasRegionRendering?: boolean;
+  options: Options;
 }
 
 // TODO: batch by color, use Path2D objects
@@ -55,6 +58,17 @@ function getVals(frame: DataFrame) {
   return vals;
 }
 
+const getTagsFromVariables = (variableId: string) => {
+  const variables = getTemplateSrv().getVariables();
+  return variables.reduce((acc: string[], variable) => {
+    if ('options' in variable && variable.id === variableId) {
+      const selectedOptions = variable.options.filter((option) => option.selected);
+      return acc.concat(...selectedOptions.map((option) => option.text || ''));
+    }
+    return acc;
+  }, []);
+};
+
 export const AnnotationsPlugin2 = ({
   annotations,
   timeZone,
@@ -62,6 +76,7 @@ export const AnnotationsPlugin2 = ({
   newRange,
   setNewRange,
   canvasRegionRendering = true,
+  options,
 }: AnnotationsPluginProps) => {
   const [plot, setPlot] = useState<uPlot>();
 
@@ -86,6 +101,7 @@ export const AnnotationsPlugin2 = ({
           timeEnd: isRegion ? newRange.to : null,
           isRegion: isRegion,
           color: DEFAULT_ANNOTATION_COLOR_HEX8,
+          tags: getTagsFromVariables(options.variable),
         },
       ]);
 
@@ -100,7 +116,7 @@ export const AnnotationsPlugin2 = ({
     }
 
     return annos;
-  }, [annotations, newRange]);
+  }, [annotations, newRange, options.variable]);
 
   const exitWipEdit = useCallback(() => {
     setNewRange(null);
