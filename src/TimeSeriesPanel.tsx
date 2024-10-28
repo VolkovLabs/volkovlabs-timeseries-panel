@@ -1,9 +1,10 @@
 import { config } from 'app/core/config';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DashboardCursorSync, DataFrame, DataFrameType, PanelProps, toDataFrame, VizOrientation } from '@grafana/data';
-import { getAppEvents, getBackendSrv, PanelDataErrorView, TimeRangeUpdatedEvent } from '@grafana/runtime';
+import { getBackendSrv, PanelDataErrorView, TimeRangeUpdatedEvent } from '@grafana/runtime';
 import { TooltipDisplayMode } from '@grafana/schema';
 import { Button, EventBusPlugin, KeyboardPlugin, TooltipPlugin2, usePanelContext, useTheme2 } from '@grafana/ui';
+import { useDashboardRefresh } from '@volkovlabs/components';
 import { TimeSeries } from 'app/core/components/TimeSeries/TimeSeries';
 import { Options } from './panelcfg.gen';
 import { ExemplarsPlugin, getVisibleLabels } from './plugins/ExemplarsPlugin';
@@ -65,6 +66,11 @@ export const TimeSeriesPanel = ({
 
   const [isAddingTimescale, setAddingTimescale] = useState(false);
   const [timescaleTriggerCoords, setTimescaleTriggerCoords] = useState<{ left: number; top: number } | null>(null);
+
+  /**
+   * Dashboard Refresh
+   */
+  const dashboardRefresh = useDashboardRefresh();
 
   const isVerticallyOriented = options.orientation === VizOrientation.Vertical;
   const frames = useMemo(() => prepareGraphableFields(data.series, config.theme2, timeRange), [data.series, timeRange]);
@@ -172,16 +178,16 @@ export const TimeSeriesPanel = ({
       await Promise.all(timescales.map((timescale) => onUpsertTimescale(timescale)));
 
       /**
-       * Publish refresh event
+       * Refresh Dashboard
        */
-      getAppEvents().publish({ type: 'variables-changed', payload: { refreshAll: true } });
+      dashboardRefresh();
 
       /**
        * Refresh timescales
        */
       await getTimescales();
     },
-    [getTimescales, onUpsertTimescale]
+    [getTimescales, onUpsertTimescale, dashboardRefresh]
   );
 
   const suggestions = useMemo(() => {
