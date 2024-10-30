@@ -10,7 +10,7 @@ import {
   TimeRange,
 } from '@grafana/data';
 import { convertFieldType } from 'app/core/utils/convertFieldType';
-import { GraphFieldConfig, LineInterpolation } from '@grafana/schema';
+import { GraphFieldConfig, LineInterpolation, TooltipDisplayMode, VizTooltipOptions } from '@grafana/schema';
 import { applyNullInsertThreshold } from '@grafana/ui/src/components/GraphNG/nullInsertThreshold';
 import { nullToValue } from '@grafana/ui/src/components/GraphNG/nullToValue';
 
@@ -210,3 +210,7 @@ export function regenerateLinksSupplier(
 
   return alignedDataFrame;
 }
+
+export const isTooltipScrollable = (tooltipOptions: VizTooltipOptions | any) => {
+  return tooltipOptions.mode === TooltipDisplayMode.Multi && tooltipOptions.maxHeight != null;
+};

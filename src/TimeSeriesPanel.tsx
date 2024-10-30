@@ -1,13 +1,12 @@
 import { config } from 'app/core/config';
-import React, { useCallback, useMemo, useState } from 'react';
-import { CartesianCoords2D, DataFrame, DataFrameType, PanelProps, toDataFrame } from '@grafana/data';
-import { getAppEvents, getBackendSrv, PanelDataErrorView } from '@grafana/runtime';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { DashboardCursorSync, DataFrame, DataFrameType, PanelProps, toDataFrame, VizOrientation } from '@grafana/data';
+import { getBackendSrv, PanelDataErrorView, TimeRangeUpdatedEvent } from '@grafana/runtime';
 import { TooltipDisplayMode } from '@grafana/schema';
-import { KeyboardPlugin, MenuItemProps, TimeSeries, TooltipPlugin, usePanelContext, ZoomPlugin } from '@grafana/ui';
+import { Button, EventBusPlugin, KeyboardPlugin, TooltipPlugin2, usePanelContext, useTheme2 } from '@grafana/ui';
+import { useDashboardRefresh } from '@volkovlabs/components';
+import { TimeSeries } from 'app/core/components/TimeSeries/TimeSeries';
 import { Options } from './panelcfg.gen';
-import { AnnotationEditorPlugin } from './plugins/AnnotationEditorPlugin';
-import { AnnotationsPlugin } from './plugins/AnnotationsPlugin';
-import { ContextMenuPlugin } from './plugins/ContextMenuPlugin';
 import { ExemplarsPlugin, getVisibleLabels } from './plugins/ExemplarsPlugin';
 import { OutsideRangePlugin } from './plugins/OutsideRangePlugin';
 import { ThresholdControlsPlugin } from './plugins/ThresholdControlsPlugin';
@@ -15,9 +14,26 @@ import { TimescaleEditor } from './plugins/timescales/TimescaleEditor';
 import { TimescaleItem } from './plugins/timescales/TimescaleEditorForm';
 import { getPrepareTimeseriesSuggestion } from './suggestions';
 import { useRuntimeVariables } from './hooks';
-import { getTimezones, prepareGraphableFields, regenerateLinksSupplier } from './utils';
+import { getTimezones, prepareGraphableFields } from './utils';
+import { TimeRange2, TooltipHoverMode } from '@grafana/ui/src/components/uPlot/plugins/TooltipPlugin2';
+import { TimeSeriesTooltip } from './TimeSeriesTooltip';
+import { AnnotationsPlugin2 } from './plugins/AnnotationsPlugin2';
 
 interface TimeSeriesPanelProps extends PanelProps<Options> {}
+
+interface PinnedPoint {
+  key: string;
+  dataIdxs: Array<number | null>;
+  seriesIdx: number | null;
+  position: {
+    left: number;
+    top: number;
+  };
+}
+
+const getPinnedPointKey = (dataIdxs: Array<number | null>, seriesIdx: number | null): string => {
+  return `${seriesIdx}-${dataIdxs.join('-')}`;
+};
 
 export const TimeSeriesPanel = ({
   data,
@@ -30,16 +46,33 @@ export const TimeSeriesPanel = ({
   onChangeTimeRange,
   replaceVariables,
   id,
-  eventBus,
+  eventBus: panelEventBus,
 }: TimeSeriesPanelProps) => {
-  const { sync, canAddAnnotations, onThresholdsChange, canEditThresholds, showThresholds } = usePanelContext();
+  const {
+    sync,
+    eventsScope,
+    canAddAnnotations,
+    onThresholdsChange,
+    canEditThresholds,
+    showThresholds,
+    dataLinkPostProcessor,
+    eventBus,
+  } = usePanelContext();
+
+  /**
+   * Theme
+   */
+  const theme = useTheme2();
 
   const [isAddingTimescale, setAddingTimescale] = useState(false);
-  const [timescaleTriggerCoords, setTimescaleTriggerCoords] = useState<{
-    viewport: CartesianCoords2D;
-    plotCanvas: CartesianCoords2D;
-  } | null>(null);
+  const [timescaleTriggerCoords, setTimescaleTriggerCoords] = useState<{ left: number; top: number } | null>(null);
 
+  /**
+   * Dashboard Refresh
+   */
+  const dashboardRefresh = useDashboardRefresh();
+
+  const isVerticallyOriented = options.orientation === VizOrientation.Vertical;
   const frames = useMemo(() => prepareGraphableFields(data.series, config.theme2, timeRange), [data.series, timeRange]);
   const timezones = useMemo(() => getTimezones(options.timezone, timeZone), [options.timezone, timeZone]);
 
@@ -145,16 +178,16 @@ export const TimeSeriesPanel = ({
       await Promise.all(timescales.map((timescale) => onUpsertTimescale(timescale)));
 
       /**
-       * Publish refresh event
+       * Refresh Dashboard
        */
-      getAppEvents().publish({ type: 'variables-changed', payload: { refreshAll: true } });
+      dashboardRefresh();
 
       /**
        * Refresh timescales
        */
       await getTimescales();
     },
-    [getTimescales, onUpsertTimescale]
+    [getTimescales, onUpsertTimescale, dashboardRefresh]
   );
 
   const suggestions = useMemo(() => {
@@ -167,6 +200,31 @@ export const TimeSeriesPanel = ({
     }
     return undefined;
   }, [frames, id]);
+
+  const enableAnnotationCreation = Boolean(canAddAnnotations && (options.allowViewerAnnotation || canAddAnnotations()));
+  const [newAnnotationRange, setNewAnnotationRange] = useState<TimeRange2 | null>(null);
+  const cursorSync = sync?.() ?? DashboardCursorSync.Off;
+  const [pinnedPoints, setPinnedPoints] = useState<PinnedPoint[]>([]);
+
+  /**
+   * Clear Pinned Points on resize
+   */
+  useEffect(() => {
+    setPinnedPoints([]);
+  }, [width, height]);
+
+  /**
+   * Clear Pinned Points on time range change
+   */
+  useEffect(() => {
+    const subscription = panelEventBus.getStream(TimeRangeUpdatedEvent).subscribe(() => {
+      setPinnedPoints([]);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [panelEventBus]);
 
   if (!frames || suggestions) {
     return (
@@ -182,8 +240,6 @@ export const TimeSeriesPanel = ({
     );
   }
 
-  const enableAnnotationCreation = Boolean(canAddAnnotations && (options.allowViewerAnnotation || canAddAnnotations()));
-
   return (
     <TimeSeries
       frames={frames}
@@ -194,101 +250,187 @@ export const TimeSeriesPanel = ({
       height={height}
       legend={options.legend}
       options={options}
+      replaceVariables={replaceVariables}
+      dataLinkPostProcessor={dataLinkPostProcessor}
+      cursorSync={cursorSync}
     >
-      {(config, alignedDataFrame) => {
-        if (alignedDataFrame.fields.some((f) => Boolean(f.config.links?.length))) {
-          alignedDataFrame = regenerateLinksSupplier(alignedDataFrame, frames, replaceVariables, timeZone);
-        }
-
-        const defaultContextMenuItems: MenuItemProps[] = scales.length
-          ? [
-              {
-                label: 'Custom scales',
-                ariaLabel: 'Custom scales',
-                icon: 'channel-add',
-                onClick: (e, p: any) => {
-                  setTimescaleTriggerCoords(p.coords);
-                  setAddingTimescale(true);
-                  getTimescales();
-                },
-              },
-            ]
-          : [];
-
+      {(uplotConfig, alignedFrame) => {
         return (
           <>
-            <KeyboardPlugin config={config} />
-            <ZoomPlugin config={config} onZoom={onChangeTimeRange} />
-            {options.tooltip.mode === TooltipDisplayMode.None || (
-              <TooltipPlugin
-                frames={frames}
-                data={alignedDataFrame}
-                config={config}
-                mode={options.tooltip.mode}
-                sortOrder={options.tooltip.sort}
-                sync={sync}
-                timeZone={timeZone}
-              />
+            <KeyboardPlugin config={uplotConfig} />
+            {cursorSync !== DashboardCursorSync.Off && (
+              <EventBusPlugin config={uplotConfig} eventBus={eventBus} frame={alignedFrame} />
             )}
-            {/* Renders annotation markers*/}
-            {data.annotations && (
-              <AnnotationsPlugin annotations={data.annotations} config={config} timeZone={timeZone} />
-            )}
-            {/* Enables annotations creation*/}
-            {enableAnnotationCreation ? (
-              <AnnotationEditorPlugin data={alignedDataFrame} timeZone={timeZone} config={config} options={options}>
-                {({ startAnnotating }) => {
+            {options.tooltip.mode !== TooltipDisplayMode.None && (
+              <TooltipPlugin2
+                config={uplotConfig}
+                hoverMode={
+                  (options.tooltip.mode === TooltipDisplayMode.Single
+                    ? TooltipHoverMode.xOne
+                    : TooltipHoverMode.xAll) as never
+                }
+                queryZoom={onChangeTimeRange}
+                clientZoom={true}
+                syncMode={cursorSync}
+                syncScope={eventsScope}
+                render={(u, dataIdxs, seriesIdx, isPinned = false, dismiss, timeRange2, viaSync) => {
+                  if (enableAnnotationCreation && timeRange2 != null) {
+                    setNewAnnotationRange(timeRange2);
+                    dismiss();
+                    return;
+                  }
+
+                  const annotate = () => {
+                    const xVal = u.posToVal(u.cursor.left!, 'x');
+
+                    setNewAnnotationRange({ from: xVal, to: xVal });
+                    dismiss();
+                  };
+
+                  const currentPointKey = getPinnedPointKey(dataIdxs, seriesIdx);
+                  const isPinnedPointExists = pinnedPoints.some((pinnedPoint) => pinnedPoint.key === currentPointKey);
+
                   return (
-                    <ContextMenuPlugin
-                      data={alignedDataFrame}
-                      tooltipMode={options.tooltip.mode}
+                    <TimeSeriesTooltip
+                      series={alignedFrame}
+                      dataIdxs={dataIdxs}
+                      seriesIdx={seriesIdx}
+                      mode={viaSync ? TooltipDisplayMode.Multi : options.tooltip.mode}
                       sortOrder={options.tooltip.sort}
-                      config={config}
-                      timeZone={timeZone}
-                      replaceVariables={replaceVariables}
-                      eventBus={eventBus}
-                      width={width}
-                      height={height}
-                      defaultItems={[
-                        {
-                          items: [
-                            {
-                              label: 'Add annotation',
-                              ariaLabel: 'Add annotation',
-                              icon: 'comment-alt',
-                              onClick: (e, p) => {
-                                if (!p) {
-                                  return;
-                                }
-                                startAnnotating({ coords: p.coords });
-                              },
-                            },
-                            ...defaultContextMenuItems,
-                          ],
-                        },
-                      ]}
+                      isPinned={isPinned}
+                      annotate={enableAnnotationCreation ? annotate : undefined}
+                      maxHeight={options.tooltip.maxHeight}
+                      headerContent={
+                        <div>
+                          {isPinnedPointExists ? (
+                            <Button
+                              size="sm"
+                              fill="text"
+                              icon="gf-pin"
+                              onClick={() => {
+                                setPinnedPoints(
+                                  pinnedPoints.filter((pinnedPoint) => pinnedPoint.key !== currentPointKey)
+                                );
+                                dismiss();
+                              }}
+                            />
+                          ) : (
+                            <Button
+                              size="sm"
+                              icon="gf-pin"
+                              onClick={() => {
+                                setPinnedPoints([
+                                  ...pinnedPoints,
+                                  {
+                                    dataIdxs: dataIdxs,
+                                    seriesIdx,
+                                    position: {
+                                      left: u.cursor.left! + u.under.offsetLeft,
+                                      top: u.cursor.top! + u.under.offsetTop,
+                                    },
+                                    key: currentPointKey,
+                                  },
+                                ]);
+                                dismiss();
+                              }}
+                              fill="text"
+                              variant="secondary"
+                            />
+                          )}
+                        </div>
+                      }
+                      footerContent={
+                        <>
+                          <Button
+                            icon="channel-add"
+                            variant="secondary"
+                            size="sm"
+                            id="custom-scales"
+                            onClick={() => {
+                              setTimescaleTriggerCoords({
+                                left: u.rect.left + (u.cursor.left ?? 0),
+                                top: u.rect.top + (u.cursor.top ?? 0),
+                              });
+                              setAddingTimescale(true);
+                              getTimescales();
+                              dismiss();
+                            }}
+                          >
+                            Custom scales
+                          </Button>
+                        </>
+                      }
                     />
                   );
                 }}
-              </AnnotationEditorPlugin>
-            ) : (
-              <ContextMenuPlugin
-                data={alignedDataFrame}
-                frames={frames}
-                config={config}
-                width={width}
-                height={height}
-                tooltipMode={options.tooltip.mode}
-                sortOrder={options.tooltip.sort}
-                timeZone={timeZone}
-                eventBus={eventBus}
-                replaceVariables={replaceVariables}
-                defaultItems={[
-                  {
-                    items: defaultContextMenuItems,
-                  },
-                ]}
+                maxWidth={options.tooltip.maxWidth}
               />
+            )}
+            {pinnedPoints.map((pinnedPoint, index) => {
+              return (
+                <div
+                  key={pinnedPoint.key}
+                  style={{
+                    position: 'absolute',
+                    left: pinnedPoint.position.left + 5,
+                    top: pinnedPoint.position.top + 5,
+                    backgroundColor: theme.components.tooltip.background,
+                    zIndex: theme.zIndex.portal,
+                    whiteSpace: 'pre',
+                    borderRadius: theme.shape.radius.default,
+                    background: theme.colors.background.primary,
+                    border: `1px solid ${theme.colors.border.weak}`,
+                    boxShadow: theme.shadows.z2,
+                    userSelect: 'text',
+                    maxWidth: options.tooltip.maxWidth ?? 'none',
+                  }}
+                >
+                  <Button
+                    icon="gf-pin"
+                    size="sm"
+                    fill="text"
+                    onClick={() => setPinnedPoints(pinnedPoints.filter((item, itemIndex) => itemIndex !== index))}
+                  />
+                  <TimeSeriesTooltip
+                    series={alignedFrame}
+                    dataIdxs={pinnedPoint.dataIdxs}
+                    seriesIdx={pinnedPoint.seriesIdx}
+                    sortOrder={options.tooltip.sort}
+                    isPinned={false}
+                    maxHeight={options.tooltip.maxHeight}
+                    mode={options.tooltip.mode}
+                  />
+                </div>
+              );
+            })}
+            {!isVerticallyOriented && (
+              <>
+                <AnnotationsPlugin2
+                  annotations={data.annotations ?? []}
+                  config={uplotConfig}
+                  timeZone={timeZone}
+                  newRange={newAnnotationRange}
+                  setNewRange={setNewAnnotationRange}
+                  options={options}
+                  variable={wellVariable}
+                />
+                <OutsideRangePlugin config={uplotConfig} onChangeTimeRange={onChangeTimeRange} />
+                {data.annotations && (
+                  <ExemplarsPlugin
+                    visibleSeries={getVisibleLabels(uplotConfig, frames)}
+                    config={uplotConfig}
+                    exemplars={data.annotations}
+                    timeZone={timeZone}
+                  />
+                )}
+                {((canEditThresholds && onThresholdsChange) || showThresholds) && (
+                  <ThresholdControlsPlugin
+                    config={uplotConfig}
+                    fieldConfig={fieldConfig}
+                    onThresholdsChange={canEditThresholds ? onThresholdsChange : undefined}
+                  />
+                )}
+              </>
             )}
             {isAddingTimescale && (
               <TimescaleEditor
@@ -297,28 +439,12 @@ export const TimeSeriesPanel = ({
                 scales={scales}
                 style={{
                   position: 'absolute',
-                  left: timescaleTriggerCoords?.viewport?.x,
-                  top: timescaleTriggerCoords?.viewport?.y,
+                  left: timescaleTriggerCoords?.left,
+                  top: timescaleTriggerCoords?.top,
                 }}
                 timescalesFrame={timescalesFrame}
               />
             )}
-            {data.annotations && (
-              <ExemplarsPlugin
-                visibleSeries={getVisibleLabels(config, frames)}
-                config={config}
-                exemplars={data.annotations}
-                timeZone={timeZone}
-              />
-            )}
-            {((canEditThresholds && onThresholdsChange) || showThresholds) && (
-              <ThresholdControlsPlugin
-                config={config}
-                fieldConfig={fieldConfig}
-                onThresholdsChange={canEditThresholds ? onThresholdsChange : undefined}
-              />
-            )}
-            <OutsideRangePlugin config={config} onChangeTimeRange={onChangeTimeRange} />
           </>
         );
       }}

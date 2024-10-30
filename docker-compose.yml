@@ -1,8 +1,6 @@
-version: '3.4'
-
 services:
   grafana:
-    image: ghcr.io/volkovlabs/app:latest
+    image: grafana/grafana:11.1.0
     ports:
       - 3000:3000/tcp
     environment:

@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.6.0 (2024-10-30)
+
+### Features / Enhancements
+
+- Added AnnotationPlugin2 based on 11.1.4 (#18)
+
 ## 1.5.0 (2024-10-21)
 
 ### Features / Enhancements

@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
 import { EventBus, TypedVariableModel } from '@grafana/data';
-import { getTemplateSrv, RefreshEvent } from '@grafana/runtime';
+import { useDashboardVariables } from '@volkovlabs/components';
 
 /**
  * Runtime Variables
@@ -8,37 +7,11 @@ import { getTemplateSrv, RefreshEvent } from '@grafana/runtime';
  * @param variableName
  */
 export const useRuntimeVariables = (eventBus: EventBus, variableName: string) => {
-  const [variables, setVariables] = useState<TypedVariableModel[]>([]);
-  const [variable, setVariable] = useState<TypedVariableModel>();
-
-  useEffect(() => {
-    setVariables(getTemplateSrv().getVariables());
-
-    /**
-     * Update variable on Refresh
-     */
-    const subscriber = eventBus.getStream(RefreshEvent).subscribe(() => {
-      setVariables(getTemplateSrv().getVariables());
-    });
-
-    return () => {
-      subscriber.unsubscribe();
-    };
-  }, [eventBus]);
-
-  const getVariable = useCallback(
-    (variableName: string) => {
-      return variables.find((variable) => variable.name === variableName);
-    },
-    [variables]
-  );
-
-  useEffect(() => {
-    setVariable(getVariable(variableName));
-  }, [getVariable, variableName]);
-
-  return {
-    variable,
-    getVariable,
-  };
+  return useDashboardVariables<TypedVariableModel>({
+    variableName,
+    toState: (variables) => variables,
+    getOne: (variables, variableName) => variables.find((variable) => variable.name === variableName),
+    initial: [],
+    eventBus,
+  });
 };
