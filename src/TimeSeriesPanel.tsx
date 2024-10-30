@@ -412,6 +412,7 @@ export const TimeSeriesPanel = ({
                   newRange={newAnnotationRange}
                   setNewRange={setNewAnnotationRange}
                   options={options}
+                  variable={wellVariable}
                 />
                 <OutsideRangePlugin config={uplotConfig} onChangeTimeRange={onChangeTimeRange} />
                 {data.annotations && (

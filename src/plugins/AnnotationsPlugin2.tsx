@@ -4,8 +4,7 @@ import { createPortal } from 'react-dom';
 import tinycolor from 'tinycolor2';
 import uPlot from 'uplot';
 
-import { arrayToDataFrame, colorManipulator, DataFrame, DataTopic } from '@grafana/data';
-import { getTemplateSrv } from '@grafana/runtime';
+import { arrayToDataFrame, colorManipulator, DataFrame, DataTopic, TypedVariableModel } from '@grafana/data';
 import { TimeZone } from '@grafana/schema';
 import { DEFAULT_ANNOTATION_COLOR, getPortalContainer, UPlotConfigBuilder, useStyles2, useTheme2 } from '@grafana/ui';
 
@@ -26,6 +25,7 @@ interface AnnotationsPluginProps {
   setNewRange: (newRage: TimeRange2 | null) => void;
   canvasRegionRendering?: boolean;
   options: Options;
+  variable: TypedVariableModel | undefined;
 }
 
 // TODO: batch by color, use Path2D objects
@@ -58,15 +58,17 @@ function getVals(frame: DataFrame) {
   return vals;
 }
 
-const getTagsFromVariables = (variableId: string) => {
-  const variables = getTemplateSrv().getVariables();
-  return variables.reduce((acc: string[], variable) => {
-    if ('options' in variable && variable.id === variableId) {
-      const selectedOptions = variable.options.filter((option) => option.selected);
-      return acc.concat(...selectedOptions.map((option) => option.text || ''));
-    }
-    return acc;
-  }, []);
+const getTagsFromVariable = (variable: TypedVariableModel | undefined): string[] => {
+  if (!variable) {
+    return [];
+  }
+
+  if ('options' in variable) {
+    const selectedOptions = variable.options.filter((option) => option.selected);
+    return selectedOptions.map((option) => (option.text as string) || '');
+  }
+
+  return [];
 };
 
 export const AnnotationsPlugin2 = ({
@@ -77,6 +79,7 @@ export const AnnotationsPlugin2 = ({
   setNewRange,
   canvasRegionRendering = true,
   options,
+  variable,
 }: AnnotationsPluginProps) => {
   const [plot, setPlot] = useState<uPlot>();
 
@@ -101,7 +104,7 @@ export const AnnotationsPlugin2 = ({
           timeEnd: isRegion ? newRange.to : null,
           isRegion: isRegion,
           color: DEFAULT_ANNOTATION_COLOR_HEX8,
-          tags: getTagsFromVariables(options.variable),
+          tags: getTagsFromVariable(variable),
         },
       ]);
 
@@ -116,7 +119,7 @@ export const AnnotationsPlugin2 = ({
     }
 
     return annos;
-  }, [annotations, newRange, options.variable]);
+  }, [annotations, newRange, variable]);
 
   const exitWipEdit = useCallback(() => {
     setNewRange(null);
