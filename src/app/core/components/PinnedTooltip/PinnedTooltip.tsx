@@ -41,15 +41,25 @@ export const PinnedTooltip = ({
    * States
    */
   const [topPosition, setTopPosition] = useState(pinnedPoint.position.top);
+  const [leftPosition, setLeftPosition] = useState(pinnedPoint.position.left);
 
   useEffect(() => {
     const adjustPointPosition = () => {
       if (!pointRef.current || !panelElement) {
         return;
       }
+      /**
+       * Position points
+       */
+      const { bottom: panelBottom, right: panelRight } = panelElement.getBoundingClientRect();
+      const { bottom: tooltipBottom, right: tooltipRight } = pointRef.current.getBoundingClientRect();
 
-      const panelBottom = panelElement.getBoundingClientRect().bottom;
-      const tooltipBottom = pointRef.current.getBoundingClientRect().bottom;
+      if (tooltipRight > panelRight) {
+        const offset = tooltipRight - panelRight;
+        const newLeft = pinnedPoint.position.left - offset;
+
+        setLeftPosition(newLeft);
+      }
 
       if (tooltipBottom > panelBottom) {
         const offset = tooltipBottom - panelBottom;
@@ -60,15 +70,14 @@ export const PinnedTooltip = ({
     };
 
     adjustPointPosition();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [panelElement, pinnedPoint.position.left]);
 
   return (
     <div
       ref={pointRef}
       style={{
         position: 'absolute',
-        left: pinnedPoint.position.left + 5,
+        left: leftPosition + 5,
         top: topPosition + 5,
         backgroundColor: theme.components.tooltip.background,
         zIndex: theme.zIndex.portal,
