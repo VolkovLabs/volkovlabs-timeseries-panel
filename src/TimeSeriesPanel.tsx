@@ -1,5 +1,5 @@
 import { config } from 'app/core/config';
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DashboardCursorSync, DataFrame, DataFrameType, PanelProps, toDataFrame, VizOrientation } from '@grafana/data';
 import { getBackendSrv, PanelDataErrorView, TimeRangeUpdatedEvent } from '@grafana/runtime';
 import { TooltipDisplayMode } from '@grafana/schema';
