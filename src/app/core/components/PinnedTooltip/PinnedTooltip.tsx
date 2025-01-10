@@ -87,7 +87,8 @@ export const PinnedTooltip = ({
         border: `1px solid ${theme.colors.border.weak}`,
         boxShadow: theme.shadows.z2,
         userSelect: 'text',
-        maxWidth: maxWidth ?? 'none',
+        maxWidth: maxWidth ?? 'max-content',
+        width: maxWidth ? 'unset' : '100%',
       }}
     >
       <Button icon="gf-pin" size="sm" fill="text" onClick={setPinnedPoints} />
