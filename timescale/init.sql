@@ -32,6 +32,7 @@ CREATE TABLE config (
 CREATE TABLE scales (
     well text NOT NULL,
     user_id integer NOT NULL,
+    dashboard_id text NOT NULL,
     metric text NOT NULL,
     min DOUBLE PRECISION NULL,
     max DOUBLE PRECISION NULL,

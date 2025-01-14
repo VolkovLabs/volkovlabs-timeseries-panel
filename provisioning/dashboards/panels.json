@@ -227,7 +227,7 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "select min, max from scales where metric='Temperature';",
+          "rawSql": "select min, max from scales where metric='Temperature' and dashboard_id='${__dashboard.uid}';",
           "refId": "B",
           "sql": {
             "columns": [
