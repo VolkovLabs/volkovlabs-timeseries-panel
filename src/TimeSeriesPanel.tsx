@@ -61,7 +61,7 @@ export const TimeSeriesPanel = ({
   const storage = usePluginUserStorage();
 
   useEffect(() => {
-    storage.getItem('volkovlabs.TimeSeriesPanel.frameSettings').then((value: string | null) => {
+    storage.getItem('volkovlabs.TimeSeriesPanel.fieldSettings').then((value: string | null) => {
       setFieldSettings(value ? JSON.parse(value) : []);
     });
 
@@ -480,7 +480,7 @@ export const TimeSeriesPanel = ({
                 <FrameSettingsEditor
                   onSave={(settings: FieldSettings[]) => {
                     setFieldSettings(settings);
-                    storage.setItem('volkovlabs.TimeSeriesPanel.frameSettings', JSON.stringify(settings));
+                    storage.setItem('volkovlabs.TimeSeriesPanel.fieldSettings', JSON.stringify(settings));
                     setShowFrameSettings(false);
                   }}
                   onDismiss={() => setShowFrameSettings(false)}

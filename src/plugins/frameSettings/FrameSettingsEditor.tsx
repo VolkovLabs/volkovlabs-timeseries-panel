@@ -130,7 +130,7 @@ export const FrameSettingsEditor: React.FC<FrameSettingsEditorProps> = ({
                               {
                                 refId: field.refId,
                                 name: field.name,
-                                axisPlacement: field.config.custom.axisPlacement,
+                                axisPlacement: placement,
                                 hideFrom: {
                                   viz: field.config.custom.hideFrom.viz,
                                 },
