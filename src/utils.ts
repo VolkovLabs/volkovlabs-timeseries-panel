@@ -14,6 +14,7 @@ import { GraphFieldConfig, LineInterpolation, TooltipDisplayMode, VizTooltipOpti
 import { applyNullInsertThreshold } from '@grafana/ui/src/components/GraphNG/nullInsertThreshold';
 import { nullToValue } from '@grafana/ui/src/components/GraphNG/nullToValue';
 import { FieldSettings } from 'app/types/frameSettings';
+import { FieldSettingItem } from 'plugins/frameSettings/FrameSettingsEditor';
 
 /**
  * Returns null if there are no graphable fields
@@ -189,7 +190,11 @@ const applyUserSettingsForFrame = (frames: DataFrame[], fieldSettings: FieldSett
         field.config.custom.axisPlacement = existedField.axisPlacement;
         field.config.custom.hideFrom = {
           ...field.config.custom.hideFrom,
-          viz: existedField.hideFrom.viz,
+          /**
+           * Hide from visualization and legend
+           */
+          viz: existedField.visibility,
+          legend: existedField.visibility,
         };
       }
     });
@@ -238,4 +243,21 @@ export function regenerateLinksSupplier(
 
 export const isTooltipScrollable = (tooltipOptions: VizTooltipOptions | any) => {
   return tooltipOptions.mode === TooltipDisplayMode.Multi && tooltipOptions.maxHeight != null;
+};
+
+export const updateFrameSettings = (currentSettings: FieldSettings[] | undefined, updatedField: FieldSettingItem) => {
+  /**
+   * Check field exist in user frame settings
+   */
+  const existingIndex = currentSettings!.findIndex(
+    (item) => item.refId === updatedField.refId && item.name === updatedField.name
+  );
+
+  if (existingIndex >= 0) {
+    return currentSettings?.map((item, index) => {
+      return existingIndex === index ? updatedField : item;
+    });
+  }
+
+  return [...currentSettings!, updatedField];
 };

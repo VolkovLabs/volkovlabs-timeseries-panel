@@ -1,6 +1,14 @@
 import { config } from 'app/core/config';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DashboardCursorSync, DataFrame, DataFrameType, PanelProps, toDataFrame, VizOrientation } from '@grafana/data';
+import {
+  DashboardCursorSync,
+  DataFrame,
+  DataFrameType,
+  FieldType,
+  PanelProps,
+  toDataFrame,
+  VizOrientation,
+} from '@grafana/data';
 import { getBackendSrv, PanelDataErrorView, TimeRangeUpdatedEvent, usePluginUserStorage } from '@grafana/runtime';
 import { TooltipDisplayMode } from '@grafana/schema';
 import { Button, EventBusPlugin, KeyboardPlugin, TooltipPlugin2, usePanelContext } from '@grafana/ui';
@@ -83,6 +91,15 @@ export const TimeSeriesPanel = ({
     () => prepareGraphableFields(data.series, config.theme2, fieldSettings, timeRange),
     [data.series, fieldSettings, timeRange]
   );
+
+  const isAllFieldsHidden = useMemo(() => {
+    const currentFields = frames?.flatMap((frame) => frame.fields).filter((field) => field.type !== FieldType.time);
+
+    /**
+     * hidden property has true flag
+     */
+    return currentFields?.every((field) => field.config.custom.hideFrom.viz);
+  }, [frames]);
 
   /**
    * revId use for structureRev
@@ -263,7 +280,24 @@ export const TimeSeriesPanel = ({
   }
 
   return (
-    <div ref={panelRoot}>
+    <div
+      ref={panelRoot}
+      onClick={() => {
+        /**
+         * Show modal for field settings if all fields are hidden
+         */
+        if (isAllFieldsHidden && !showFrameSettings) {
+          if (panelRoot.current) {
+            /**
+             * setTriggerCoords
+             */
+            const { right, bottom } = panelRoot.current?.getBoundingClientRect();
+            setTriggerCoords({ left: right / 2, top: bottom / 2 });
+          }
+          setShowFrameSettings(true);
+        }
+      }}
+    >
       <TimeSeries
         frames={frames}
         /**
@@ -478,17 +512,17 @@ export const TimeSeriesPanel = ({
               )}
               {showFrameSettings && (
                 <FrameSettingsEditor
+                  style={{
+                    position: 'absolute',
+                    left: triggerCoords?.left,
+                    top: triggerCoords?.top,
+                  }}
                   onSave={(settings: FieldSettings[]) => {
                     setFieldSettings(settings);
                     storage.setItem('volkovlabs.TimeSeriesPanel.fieldSettings', JSON.stringify(settings));
                     setShowFrameSettings(false);
                   }}
                   onDismiss={() => setShowFrameSettings(false)}
-                  style={{
-                    position: 'absolute',
-                    left: triggerCoords?.left,
-                    top: triggerCoords?.top,
-                  }}
                   fieldSettings={fieldSettings}
                   frames={frames}
                 />

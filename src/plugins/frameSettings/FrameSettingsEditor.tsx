@@ -1,10 +1,51 @@
-import React, { HTMLAttributes, useMemo, useRef, useState } from 'react';
+import React, { HTMLAttributes, useEffect, useMemo, useRef, useState } from 'react';
 import { usePopper } from 'react-popper';
-import { AxisPlacement, IconButton, Portal, RadioButtonGroup, Stack, useStyles2 } from '@grafana/ui';
+import { IconButton, Portal, Stack, useStyles2 } from '@grafana/ui';
 import { DataFrame, FieldType, GrafanaTheme2 } from '@grafana/data';
 import useClickAway from 'react-use/lib/useClickAway';
 import { css } from '@emotion/css';
 import { FieldSettings } from 'app/types/frameSettings';
+import { ColumnDef } from '@tanstack/react-table';
+import { FieldsEditableTable } from './components';
+
+/**
+ * Constants
+ */
+const MaxRows = 10;
+const RowHeight = 40.5;
+
+/**
+ * Timescale Item
+ */
+export interface FieldSettingItem {
+  /**
+   * Field name
+   *
+   * @type {string}
+   */
+  name: string;
+
+  /**
+   * Frame refId
+   *
+   * @type {string}
+   */
+  refId?: string;
+
+  /**
+   * Visibility
+   *
+   * @type {boolean}
+   */
+  visibility: boolean;
+
+  /**
+   * Axis Placement
+   *
+   * @type {string}
+   */
+  axisPlacement: string;
+}
 
 interface FrameSettingsEditorProps extends HTMLAttributes<HTMLDivElement> {
   onSave: (settings: FieldSettings[]) => void;
@@ -12,25 +53,6 @@ interface FrameSettingsEditorProps extends HTMLAttributes<HTMLDivElement> {
   fieldSettings: FieldSettings[];
   frames: DataFrame[];
 }
-
-/**
- * Display Options
- */
-const placementOptions = [
-  {
-    value: AxisPlacement.Auto,
-    label: 'Auto',
-    description: 'First field on the left, everything else on the right',
-  },
-  {
-    value: AxisPlacement.Left,
-    label: 'Left',
-  },
-  {
-    value: AxisPlacement.Right,
-    label: 'Right',
-  },
-];
 
 export const FrameSettingsEditor: React.FC<FrameSettingsEditorProps> = ({
   onDismiss,
@@ -43,6 +65,16 @@ export const FrameSettingsEditor: React.FC<FrameSettingsEditorProps> = ({
 
   const [popperTrigger, setPopperTrigger] = useState<HTMLDivElement | null>(null);
   const [editorPopover, setEditorPopover] = useState<HTMLDivElement | null>(null);
+
+  const [size, setSize] = useState({
+    width: 0,
+    height: 0,
+  });
+
+  /**
+   * Editable Table Data
+   */
+  const [editableTableData, setEditableTableData] = useState<FieldSettingItem[]>([]);
 
   const clickAwayRef = useRef<HTMLDivElement>(null);
 
@@ -58,6 +90,16 @@ export const FrameSettingsEditor: React.FC<FrameSettingsEditorProps> = ({
       ),
     [frames]
   );
+
+  useEffect(() => {
+    const formElement = document.querySelector(`.${styles.editor}`);
+    if (formElement && fields) {
+      setSize({
+        width: formElement.clientWidth,
+        height: (Math.min(fields.length, MaxRows) + 1) * RowHeight,
+      });
+    }
+  }, [styles.editor, fields]);
 
   useClickAway(clickAwayRef, () => {
     onDismiss();
@@ -76,6 +118,68 @@ export const FrameSettingsEditor: React.FC<FrameSettingsEditorProps> = ({
     ],
   });
 
+  /**
+   * Transform fields into editableTable Data
+   */
+  useEffect(() => {
+    if (!fields.length) {
+      return;
+    }
+
+    /**
+     * Set Table Data
+     */
+    setEditableTableData(
+      fields.map((field) => {
+        return {
+          name: field.name,
+          refId: field.refId,
+          visibility: field.config.custom.hideFrom.viz,
+          axisPlacement: field.config.custom.axisPlacement,
+        };
+      })
+    );
+  }, [fields]);
+
+  /**
+   * Editable Table Columns
+   */
+  const columns: Array<ColumnDef<FieldSettingItem>> = useMemo(() => {
+    return [
+      {
+        id: 'name',
+        accessorKey: 'name',
+        header: () => 'Field',
+        cell: ({ getValue }) => {
+          const value = getValue() as string;
+          return value.charAt(0).toUpperCase() + value.slice(1);
+        },
+        enableResizing: false,
+        meta: {
+          fieldSettings: fieldSettings,
+        },
+      },
+      {
+        id: 'visibility',
+        accessorKey: 'visibility',
+        header: () => 'Visibility',
+        enableResizing: false,
+        meta: {
+          fieldSettings: fieldSettings,
+        },
+      },
+      {
+        id: 'axisPlacement',
+        accessorKey: 'axisPlacement',
+        header: () => 'Axis Placement',
+        enableResizing: false,
+        meta: {
+          fieldSettings: fieldSettings,
+        },
+      },
+    ];
+  }, [fieldSettings]);
+
   return (
     <Portal>
       <>
@@ -88,113 +192,22 @@ export const FrameSettingsEditor: React.FC<FrameSettingsEditorProps> = ({
                 <IconButton name="times" aria-label="Close" onClick={onDismiss} />
               </Stack>
             </div>
-            <div className={styles.fieldsWrapper}>
-              {fields.map((field) => {
-                const fieldVisibility = !field.config.custom.hideFrom.viz;
-
-                return (
-                  <div className={styles.field} key={`${field.refId}:${field.name}`}>
-                    <p className={styles.fieldName}>{field.name} : </p>
-                    <div className={styles.controls}>
-                      <RadioButtonGroup
-                        options={placementOptions}
-                        value={field.config.custom.axisPlacement}
-                        onChange={(placement) => {
-                          /**
-                           * Check field exist in user frame settings
-                           */
-                          const existingIndex = fieldSettings.findIndex(
-                            (item) => item.refId === field.refId && item.name === field.name
-                          );
-
-                          let updatedSettings: FieldSettings[] = [];
-
-                          if (existingIndex >= 0) {
-                            /**
-                             * Update settings
-                             */
-                            updatedSettings = fieldSettings.map((item, index) => {
-                              return existingIndex === index
-                                ? {
-                                    ...item,
-                                    axisPlacement: placement,
-                                  }
-                                : item;
-                            });
-                          } else {
-                            /**
-                             * Add field to settings
-                             */
-                            updatedSettings = [
-                              ...fieldSettings,
-                              {
-                                refId: field.refId,
-                                name: field.name,
-                                axisPlacement: placement,
-                                hideFrom: {
-                                  viz: field.config.custom.hideFrom.viz,
-                                },
-                              },
-                            ];
-                          }
-
-                          /**
-                           * Save settings
-                           */
-                          onSave(updatedSettings);
-                        }}
-                      />
-                      <IconButton
-                        className={styles.iconButton}
-                        name={fieldVisibility ? 'eye' : 'eye-slash'}
-                        aria-label="Set field visibility"
-                        onClick={() => {
-                          /**
-                           * Check field exist in user frame settings
-                           */
-                          const existingIndex = fieldSettings.findIndex(
-                            (item) => item.refId === field.refId && item.name === field.name
-                          );
-
-                          let updatedSettings: FieldSettings[] = [];
-
-                          if (existingIndex >= 0) {
-                            /**
-                             * Update settings
-                             */
-                            updatedSettings = fieldSettings.map((item, index) => {
-                              return existingIndex === index
-                                ? {
-                                    ...item,
-                                    hideFrom: {
-                                      viz: !field.config.custom.hideFrom.viz,
-                                    },
-                                  }
-                                : item;
-                            });
-                          } else {
-                            /**
-                             * Add field to settings
-                             */
-                            updatedSettings = [
-                              ...fieldSettings,
-                              {
-                                refId: field.refId,
-                                name: field.name,
-                                axisPlacement: field.config.custom.axisPlacement,
-                                hideFrom: {
-                                  viz: !field.config.custom.hideFrom.viz,
-                                },
-                              },
-                            ];
-                          }
-                          onSave(updatedSettings);
-                        }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+            <div>
+              <div className={styles.table} style={{ width: size.width, maxHeight: size.height }}>
+                {!!editableTableData.length && (
+                  <FieldsEditableTable
+                    data={editableTableData}
+                    columns={columns}
+                    onUpdateData={(updatedRowIndex, updatedColumnId, value) => {
+                      /**
+                       * Save settings
+                       */
+                      console.log('console > save settings -> value', value);
+                      onSave(value as FieldSettings[]);
+                    }}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -212,6 +225,10 @@ const getStyles = (theme: GrafanaTheme2) => {
       border: 1px solid ${theme.colors.border.weak};
       border-radius: ${theme.shape.radius.default};
       width: 460px;
+    `,
+    table: css`
+      margin-bottom: ${theme.spacing(1)};
+      overflow: auto;
     `,
     header: css`
       border-bottom: 1px solid ${theme.colors.border.weak};

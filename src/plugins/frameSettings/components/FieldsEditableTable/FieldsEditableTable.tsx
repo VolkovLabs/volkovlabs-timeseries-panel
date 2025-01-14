@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Checkbox, Input, useStyles2 } from '@grafana/ui';
-import { ColumnDef, flexRender, getCoreRowModel, RowData, useReactTable } from '@tanstack/react-table';
+import React from 'react';
+import { AxisPlacement, Checkbox, RadioButtonGroup, useStyles2 } from '@grafana/ui';
+import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { cx } from '@emotion/css';
-import { Styles } from './EditableTable.styles';
-import { FieldSettings } from 'app/types/frameSettings';
+import { Styles } from './FieldsEditableTable.styles';
+import { FieldSettingItem } from 'plugins/frameSettings/FrameSettingsEditor';
+import { updateFrameSettings } from '../../../../utils';
 
 /**
  * Properties
@@ -25,72 +26,79 @@ interface Props<TData> {
   onUpdateData: (rowIndex: number, columnId: string, value: unknown) => void;
 }
 
-declare module '@tanstack/react-table' {
-  interface TableMeta<TData extends RowData> {
-    updateData: (rowIndex: number, columnId: string, value: unknown) => void;
-  }
-
-  interface ColumnMeta<TData extends RowData, TValue> {
-    fieldSettings?: FieldSettings[];
-  }
-}
+/**
+ * Display Options
+ */
+const placementOptions = [
+  {
+    value: AxisPlacement.Auto,
+    label: 'Auto',
+    description: 'First field on the left, everything else on the right',
+  },
+  {
+    value: AxisPlacement.Left,
+    label: 'Left',
+  },
+  {
+    value: AxisPlacement.Right,
+    label: 'Right',
+  },
+];
 
 /**
  * Default Column
  */
 const defaultColumn: Partial<ColumnDef<any>> = {
-  cell: ({ getValue, row: { index, original }, column: { id }, table }) => {
-    const initialValue = getValue();
-    /**
-     *  We need to keep and update the state of the cell normally
-     */
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [value, setValue] = useState(initialValue);
+  cell: ({ getValue, row, column, table }) => {
+    const value = getValue();
+    const currentSettings = column.columnDef.meta?.fieldSettings;
 
-    /**
-     * When the input is blurred, we'll call our table meta's updateData function
-     */
     const onSaveValue = (value: unknown) => {
-      table.options.meta?.updateData(index, id, value);
+      table.options.meta?.updateData(row.index, column.id, value);
     };
 
-    /**
-     * If the initialValue is changed external, sync it up with our state
-     */
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useEffect(() => {
-      setValue(initialValue);
-    }, [initialValue]);
-
-    if (id === 'auto') {
+    if (column.id === 'visibility') {
       return (
         <Checkbox
-          value={value as boolean}
+          /**
+           * hideFrom.viz: true means hide from visualization
+           */
+          value={!value as boolean}
           onChange={(e) => {
-            setValue(e.currentTarget.checked);
-            onSaveValue(e.currentTarget.checked);
+            if (currentSettings) {
+              const updatedSettings = updateFrameSettings(currentSettings, {
+                ...row.original,
+                visibility: !e.currentTarget.checked,
+              } as FieldSettingItem);
+              onSaveValue(updatedSettings);
+            }
           }}
         />
       );
     }
 
     return (
-      <Input
-        value={original.auto ? '' : (value as string)}
-        placeholder={original ? 'Auto' : ''}
-        onChange={(e) => setValue(e.currentTarget.value)}
-        onBlur={() => onSaveValue(value)}
-        type={typeof initialValue === 'number' ? 'number' : 'text'}
-        disabled={original.auto}
+      <RadioButtonGroup
+        options={placementOptions}
+        value={value}
+        onChange={(placement) => {
+          if (currentSettings) {
+            const updatedSettings = updateFrameSettings(currentSettings, {
+              ...row.original,
+              axisPlacement: placement,
+            } as FieldSettingItem);
+            onSaveValue(updatedSettings);
+          }
+        }}
       />
     );
   },
 };
 
 /**
- * Editable Table
+ * Fields Editable Table
  */
-export const EditableTable = <TData,>({ data, columns, onUpdateData }: Props<TData>) => {
+export const FieldsEditableTable = <TData,>({ data, columns, onUpdateData }: Props<TData>) => {
   /**
    * Styles
    */
@@ -123,6 +131,7 @@ export const EditableTable = <TData,>({ data, columns, onUpdateData }: Props<TDa
                     key={header.id}
                     className={cx(styles.headerCell, {
                       [styles.disableGrow]: !header.column.getCanResize(),
+                      [styles.cellCenter]: header.column.id !== 'name',
                     })}
                     colSpan={header.colSpan}
                   >
@@ -144,7 +153,7 @@ export const EditableTable = <TData,>({ data, columns, onUpdateData }: Props<TDa
                   <td
                     key={cell.id}
                     className={cx({
-                      [styles.cellCenter]: cell.column.id === 'auto',
+                      [styles.cellCenter]: cell.column.id !== 'name',
                     })}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
