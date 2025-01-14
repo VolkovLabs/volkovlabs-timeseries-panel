@@ -208,6 +208,7 @@ const getStyles = (theme: GrafanaTheme2, justify: string, marginRight: string) =
     alignItems: 'start',
     justifyContent: justify,
     marginRight: marginRight,
+    flexWrap: 'wrap',
   }),
   label: css({
     color: theme.colors.text.secondary,

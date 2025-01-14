@@ -16,6 +16,7 @@ const getTestIdSelector = (testId: string) => `[data-testid="${testId}"]`;
  */
 describe('Viewing an Time Series panel', () => {
   beforeEach(() => {
+    e2e.flows.login('admin', 'admin');
     e2e.flows.openDashboard({
       uid: json.uid,
     });
