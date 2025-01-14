@@ -13,6 +13,7 @@ import { convertFieldType } from 'app/core/utils/convertFieldType';
 import { GraphFieldConfig, LineInterpolation, TooltipDisplayMode, VizTooltipOptions } from '@grafana/schema';
 import { applyNullInsertThreshold } from '@grafana/ui/src/components/GraphNG/nullInsertThreshold';
 import { nullToValue } from '@grafana/ui/src/components/GraphNG/nullToValue';
+import { FieldSettings } from 'app/types/frameSettings';
 
 /**
  * Returns null if there are no graphable fields
@@ -20,6 +21,7 @@ import { nullToValue } from '@grafana/ui/src/components/GraphNG/nullToValue';
 export function prepareGraphableFields(
   series: DataFrame[],
   theme: GrafanaTheme2,
+  fieldSettings: FieldSettings[],
   timeRange?: TimeRange,
   // numeric X requires a single frame where the first field is numeric
   xNumFieldIdx?: number
@@ -149,6 +151,11 @@ export function prepareGraphableFields(
 
   if (frames.length) {
     setClassicPaletteIdxs(frames, theme, 0);
+    /**
+     * Apply user settings from user storage
+     */
+    applyUserSettingsForFrame(frames, fieldSettings);
+
     return frames;
   }
 
@@ -166,6 +173,24 @@ const setClassicPaletteIdxs = (frames: DataFrame[], theme: GrafanaTheme2, skipFi
           seriesIndex: seriesIndex++, // TODO: skip this for fields with custom renderers (e.g. Candlestick)?
         };
         field.display = getDisplayProcessor({ field, theme });
+      }
+    });
+  });
+};
+
+/**
+ * applyUserSettingsForFrame
+ */
+const applyUserSettingsForFrame = (frames: DataFrame[], fieldSettings: FieldSettings[]) => {
+  frames.forEach((frame) => {
+    frame.fields.forEach((field) => {
+      const existedField = fieldSettings.find((item) => item.refId === frame.refId && item.name === field.name);
+      if (existedField) {
+        field.config.custom.axisPlacement = existedField.axisPlacement;
+        field.config.custom.hideFrom = {
+          ...field.config.custom.hideFrom,
+          viz: existedField.hideFrom.viz,
+        };
       }
     });
   });
