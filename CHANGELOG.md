@@ -1,5 +1,12 @@
 # Change Log
 
+## 1.7.0 (IN PROGRESS)
+
+### Features / Enhancements
+
+- Updated the position of the tooltip (#19)
+- Updated Custom Scales per dashboard (#20)
+
 ## 1.6.0 (2024-10-30)
 
 ### Features / Enhancements

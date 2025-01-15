@@ -95,7 +95,8 @@ export const TimeSeriesPanel = ({
   const getTimescales = useCallback(async () => {
     const user = config.bootData.user;
     const userId = user?.id;
-    const rawSql = `select min, max, metric from scales where user_id=${userId} and well='${well}';`;
+    const dashboardId = data.request?.dashboardUID;
+    const rawSql = `select min, max, metric from scales where user_id=${userId} and dashboard_id='${dashboardId}' and well='${well}';`;
     const target = data.request?.targets[0];
     const datasourceId = target?.datasource?.uid;
     const refId = target?.refId;
@@ -125,15 +126,16 @@ export const TimeSeriesPanel = ({
     }
 
     setTimescalesFrame(null);
-  }, [data.request?.targets, well]);
+  }, [data.request?.targets, well, data.request?.dashboardUID]);
 
   const onUpsertTimescale = useCallback(
     async (formData: TimescaleItem) => {
       const { min, max, description, scale, auto } = formData;
       const user = config.bootData.user;
       const userId = user?.id;
+      const dashboardId = data.request?.dashboardUID;
       const sanitizedDescription = description.replace(/\"|\'/g, '');
-      const rawSql = `insert into scales values ('${well}', ${userId}, '${scale}', ${auto ? null : min}, ${
+      const rawSql = `insert into scales values ('${well}', ${userId}, '${dashboardId}', '${scale}', ${auto ? null : min}, ${
         auto ? null : max
       }, '${sanitizedDescription}') on conflict (well, user_id, metric) do update set min = excluded.min, max = excluded.max;`;
       const target = data.request?.targets[0];
@@ -159,7 +161,7 @@ export const TimeSeriesPanel = ({
         to: 'now',
       });
     },
-    [data.request?.targets, well]
+    [data.request?.targets, well, data.request?.dashboardUID]
   );
 
   const onUpsertTimescales = useCallback(
