@@ -1,11 +1,21 @@
 import { config } from 'app/core/config';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DashboardCursorSync, DataFrame, DataFrameType, PanelProps, toDataFrame, VizOrientation } from '@grafana/data';
-import { getBackendSrv, PanelDataErrorView, TimeRangeUpdatedEvent } from '@grafana/runtime';
+import {
+  DashboardCursorSync,
+  DataFrame,
+  DataFrameType,
+  FieldType,
+  PanelProps,
+  toDataFrame,
+  VizOrientation,
+} from '@grafana/data';
+import { getBackendSrv, PanelDataErrorView, TimeRangeUpdatedEvent, usePluginUserStorage } from '@grafana/runtime';
 import { TooltipDisplayMode } from '@grafana/schema';
 import { Button, EventBusPlugin, KeyboardPlugin, TooltipPlugin2, usePanelContext } from '@grafana/ui';
 import { useDashboardRefresh } from '@volkovlabs/components';
 import { TimeSeries } from 'app/core/components/TimeSeries/TimeSeries';
+import { FrameSettingsEditor } from 'plugins/frameSettings/FrameSettingsEditor';
+import { FieldSettings } from 'app/types/frameSettings';
 import { Options } from './panelcfg.gen';
 import { ExemplarsPlugin, getVisibleLabels } from './plugins/ExemplarsPlugin';
 import { OutsideRangePlugin } from './plugins/OutsideRangePlugin';
@@ -22,6 +32,8 @@ import { PinnedTooltip } from 'app/core/components/PinnedTooltip/PinnedTooltip';
 import { PinnedPoint } from 'app/types';
 
 interface TimeSeriesPanelProps extends PanelProps<Options> {}
+
+const USER_FIELD_SETTINGS_KEY = 'volkovlabs.TimeSeriesPanel.fieldSettings';
 
 const getPinnedPointKey = (dataIdxs: Array<number | null>, seriesIdx: number | null): string => {
   return `${seriesIdx}-${dataIdxs.join('-')}`;
@@ -52,7 +64,22 @@ export const TimeSeriesPanel = ({
   } = usePanelContext();
 
   const [isAddingTimescale, setAddingTimescale] = useState(false);
-  const [timescaleTriggerCoords, setTimescaleTriggerCoords] = useState<{ left: number; top: number } | null>(null);
+  const [fieldSettings, setFieldSettings] = useState<FieldSettings[]>([]);
+  const [showFrameSettings, setShowFrameSettings] = useState(false);
+  const [triggerCoords, setTriggerCoords] = useState<{ left: number; top: number } | null>(null);
+
+  const storage = usePluginUserStorage();
+
+  useEffect(() => {
+    storage.getItem(USER_FIELD_SETTINGS_KEY).then((value: string | null) => {
+      setFieldSettings(value ? JSON.parse(value) : []);
+    });
+
+    /**
+     * Load once
+     */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const panelRoot = useRef<HTMLDivElement>(null);
 
@@ -62,7 +89,32 @@ export const TimeSeriesPanel = ({
   const dashboardRefresh = useDashboardRefresh();
 
   const isVerticallyOriented = options.orientation === VizOrientation.Vertical;
-  const frames = useMemo(() => prepareGraphableFields(data.series, config.theme2, timeRange), [data.series, timeRange]);
+  const frames = useMemo(
+    () => prepareGraphableFields(data.series, config.theme2, fieldSettings, timeRange),
+    [data.series, fieldSettings, timeRange]
+  );
+
+  const isAllFieldsHidden = useMemo(() => {
+    const currentFields = frames?.flatMap((frame) => frame.fields).filter((field) => field.type !== FieldType.time);
+
+    /**
+     * hidden property has true flag
+     */
+    return currentFields?.every((field) => field.config.custom.hideFrom.viz);
+  }, [frames]);
+
+  /**
+   * revId use for structureRev
+   * Should be changed when data changes or frame changes to render TimeSeries correctly
+   */
+  const revId = useMemo(() => {
+    if (!!frames?.length || data.structureRev) {
+      const structureRev = data.structureRev || 0;
+      return structureRev + Math.random();
+    }
+    return Math.random();
+  }, [data.structureRev, frames]);
+
   const timezones = useMemo(() => getTimezones(options.timezone, timeZone), [options.timezone, timeZone]);
 
   const [timescalesFrame, setTimescalesFrame] = useState<DataFrame | null>(null);
@@ -232,10 +284,30 @@ export const TimeSeriesPanel = ({
   }
 
   return (
-    <div ref={panelRoot}>
+    <div
+      ref={panelRoot}
+      onClick={() => {
+        /**
+         * Show modal for field settings if all fields are hidden
+         */
+        if (isAllFieldsHidden && !showFrameSettings) {
+          if (panelRoot.current) {
+            /**
+             * setTriggerCoords
+             */
+            const { right, bottom } = panelRoot.current?.getBoundingClientRect();
+            setTriggerCoords({ left: right / 2, top: bottom / 2 });
+          }
+          setShowFrameSettings(true);
+        }
+      }}
+    >
       <TimeSeries
         frames={frames}
-        structureRev={data.structureRev}
+        /**
+         * structureRev use to rerender TimeSeries (compare props.)
+         */
+        structureRev={revId}
         timeRange={timeRange}
         timeZone={timezones}
         width={width}
@@ -332,14 +404,22 @@ export const TimeSeriesPanel = ({
                           </div>
                         }
                         footerContent={
-                          <>
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                            }}
+                          >
                             <Button
                               icon="channel-add"
                               variant="secondary"
                               size="sm"
+                              style={{
+                                marginBottom: '8px',
+                              }}
                               id="custom-scales"
                               onClick={() => {
-                                setTimescaleTriggerCoords({
+                                setTriggerCoords({
                                   left: u.rect.left + (u.cursor.left ?? 0),
                                   top: u.rect.top + (u.cursor.top ?? 0),
                                 });
@@ -350,7 +430,23 @@ export const TimeSeriesPanel = ({
                             >
                               Custom scales
                             </Button>
-                          </>
+                            <Button
+                              icon="chart-line"
+                              variant="secondary"
+                              size="sm"
+                              id="frame-settings"
+                              onClick={() => {
+                                setTriggerCoords({
+                                  left: u.rect.left + (u.cursor.left ?? 0),
+                                  top: u.rect.top + (u.cursor.top ?? 0),
+                                });
+                                setShowFrameSettings(true);
+                                dismiss();
+                              }}
+                            >
+                              Frame settings
+                            </Button>
+                          </div>
                         }
                       />
                     );
@@ -412,10 +508,26 @@ export const TimeSeriesPanel = ({
                   scales={scales}
                   style={{
                     position: 'absolute',
-                    left: timescaleTriggerCoords?.left,
-                    top: timescaleTriggerCoords?.top,
+                    left: triggerCoords?.left,
+                    top: triggerCoords?.top,
                   }}
                   timescalesFrame={timescalesFrame}
+                />
+              )}
+              {showFrameSettings && (
+                <FrameSettingsEditor
+                  style={{
+                    position: 'absolute',
+                    left: triggerCoords?.left,
+                    top: triggerCoords?.top,
+                  }}
+                  onSave={(settings: FieldSettings[]) => {
+                    setFieldSettings(settings);
+                    storage.setItem(USER_FIELD_SETTINGS_KEY, JSON.stringify(settings));
+                  }}
+                  onDismiss={() => setShowFrameSettings(false)}
+                  fieldSettings={fieldSettings}
+                  frames={frames}
                 />
               )}
             </>
