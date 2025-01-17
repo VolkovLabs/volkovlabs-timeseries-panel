@@ -520,7 +520,6 @@ export const TimeSeriesPanel = ({
                   onSave={(settings: FieldSettings[]) => {
                     setFieldSettings(settings);
                     storage.setItem('volkovlabs.TimeSeriesPanel.fieldSettings', JSON.stringify(settings));
-                    setShowFrameSettings(false);
                   }}
                   onDismiss={() => setShowFrameSettings(false)}
                   fieldSettings={fieldSettings}
