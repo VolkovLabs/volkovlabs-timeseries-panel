@@ -202,7 +202,6 @@ export const FrameSettingsEditor: React.FC<FrameSettingsEditorProps> = ({
                       /**
                        * Save settings
                        */
-                      console.log('console > save settings -> value', value);
                       onSave(value as FieldSettings[]);
                     }}
                   />

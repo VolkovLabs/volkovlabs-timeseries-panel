@@ -33,6 +33,8 @@ import { PinnedPoint } from 'app/types';
 
 interface TimeSeriesPanelProps extends PanelProps<Options> {}
 
+const USER_FIELD_SETTINGS_KEY = 'volkovlabs.TimeSeriesPanel.fieldSettings';
+
 const getPinnedPointKey = (dataIdxs: Array<number | null>, seriesIdx: number | null): string => {
   return `${seriesIdx}-${dataIdxs.join('-')}`;
 };
@@ -69,7 +71,7 @@ export const TimeSeriesPanel = ({
   const storage = usePluginUserStorage();
 
   useEffect(() => {
-    storage.getItem('volkovlabs.TimeSeriesPanel.fieldSettings').then((value: string | null) => {
+    storage.getItem(USER_FIELD_SETTINGS_KEY).then((value: string | null) => {
       setFieldSettings(value ? JSON.parse(value) : []);
     });
 
@@ -519,7 +521,7 @@ export const TimeSeriesPanel = ({
                   }}
                   onSave={(settings: FieldSettings[]) => {
                     setFieldSettings(settings);
-                    storage.setItem('volkovlabs.TimeSeriesPanel.fieldSettings', JSON.stringify(settings));
+                    storage.setItem(USER_FIELD_SETTINGS_KEY, JSON.stringify(settings));
                   }}
                   onDismiss={() => setShowFrameSettings(false)}
                   fieldSettings={fieldSettings}
