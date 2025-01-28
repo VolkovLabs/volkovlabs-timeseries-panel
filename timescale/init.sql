@@ -37,7 +37,7 @@ CREATE TABLE scales (
     min DOUBLE PRECISION NULL,
     max DOUBLE PRECISION NULL,
     description text NOT NULL,
-    UNIQUE (well, user_id, metric)
+    UNIQUE (well, user_id, dashboard_id, metric)
 );
 
 CREATE SEQUENCE seq_metrics START 1;
