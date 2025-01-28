@@ -137,7 +137,7 @@ export const TimeSeriesPanel = ({
       const sanitizedDescription = description.replace(/\"|\'/g, '');
       const rawSql = `insert into scales values ('${well}', ${userId}, '${dashboardId}', '${scale}', ${auto ? null : min}, ${
         auto ? null : max
-      }, '${sanitizedDescription}') on conflict (well, user_id, metric) do update set min = excluded.min, max = excluded.max;`;
+      }, '${sanitizedDescription}') on conflict (well, user_id, dashboard_id, metric) do update set min = excluded.min, max = excluded.max;`;
       const target = data.request?.targets[0];
       const datasourceId = target?.datasource?.uid;
       const refId = target?.refId;
