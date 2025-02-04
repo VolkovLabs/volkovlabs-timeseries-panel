@@ -3,7 +3,7 @@
   "dependencies": {
     "@emotion/css": "^11.13.0",
     "@grafana/data": "^11.1.4",
-    "@grafana/runtime": "^11.5.0-216340",
+    "@grafana/runtime": "^11.5.1",
     "@grafana/schema": "^11.1.4",
     "@grafana/ui": "^11.1.4",
     "@reduxjs/toolkit": "^2.2.7",
