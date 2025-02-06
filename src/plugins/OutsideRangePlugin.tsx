@@ -9,6 +9,10 @@ interface ThresholdControlsPluginProps {
   onChangeTimeRange: (timeRange: AbsoluteTimeRange) => void;
 }
 
+/**
+ * OutsideRangePlugin
+ * Handle outside values range
+ */
 export const OutsideRangePlugin = ({ config, onChangeTimeRange }: ThresholdControlsPluginProps) => {
   const plotInstance = useRef<uPlot>();
   const [timevalues, setTimeValues] = useState<number[] | TypedArray>([]);
@@ -60,25 +64,15 @@ export const OutsideRangePlugin = ({ config, onChangeTimeRange }: ThresholdContr
   }
 
   return (
-    <div
-      style={{
-        position: 'absolute',
-        top: '50%',
-        transform: 'translateY(-50%)',
-        width: '100%',
-        textAlign: 'center',
-      }}
-    >
-      <div>
-        <div>Data outside time range</div>
-        <Button
-          onClick={() => onChangeTimeRange({ from: first, to: last })}
-          variant="secondary"
-          data-testid="time-series-zoom-to-data"
-        >
-          Zoom to data
-        </Button>
-      </div>
+    <div>
+      <div>Data outside time range</div>
+      <Button
+        onClick={() => onChangeTimeRange({ from: first, to: last })}
+        variant="secondary"
+        data-testid="time-series-zoom-to-data"
+      >
+        Zoom to data
+      </Button>
     </div>
   );
 };

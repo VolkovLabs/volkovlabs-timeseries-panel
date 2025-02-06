@@ -8,7 +8,6 @@ import { useDashboardRefresh } from '@volkovlabs/components';
 import { TimeSeries } from 'app/core/components/TimeSeries/TimeSeries';
 import { Options } from './panelcfg.gen';
 import { ExemplarsPlugin, getVisibleLabels } from './plugins/ExemplarsPlugin';
-import { OutsideRangePlugin } from './plugins/OutsideRangePlugin';
 import { ThresholdControlsPlugin } from './plugins/ThresholdControlsPlugin';
 import { TimescaleEditor } from './plugins/timescales/TimescaleEditor';
 import { TimescaleItem } from './plugins/timescales/TimescaleEditorForm';
@@ -20,6 +19,7 @@ import { TimeSeriesTooltip } from './TimeSeriesTooltip';
 import { AnnotationsPlugin2 } from './plugins/AnnotationsPlugin2';
 import { PinnedTooltip } from 'app/core/components/PinnedTooltip/PinnedTooltip';
 import { PinnedPoint } from 'app/types';
+import { OutsideConfigPlugins } from 'plugins/OutsideConfigPlugins';
 
 interface TimeSeriesPanelProps extends PanelProps<Options> {}
 
@@ -51,8 +51,11 @@ export const TimeSeriesPanel = ({
     eventBus,
   } = usePanelContext();
 
+  /**
+   * State
+   */
   const [isAddingTimescale, setAddingTimescale] = useState(false);
-  const [timescaleTriggerCoords, setTimescaleTriggerCoords] = useState<{ left: number; top: number } | null>(null);
+  const [triggerCoords, setTriggerCoords] = useState<{ left: number; top: number } | null>(null);
 
   const panelRoot = useRef<HTMLDivElement>(null);
 
@@ -341,7 +344,7 @@ export const TimeSeriesPanel = ({
                               size="sm"
                               id="custom-scales"
                               onClick={() => {
-                                setTimescaleTriggerCoords({
+                                setTriggerCoords({
                                   left: u.rect.left + (u.cursor.left ?? 0),
                                   top: u.rect.top + (u.cursor.top ?? 0),
                                 });
@@ -389,7 +392,22 @@ export const TimeSeriesPanel = ({
                     options={options}
                     variable={wellVariable}
                   />
-                  <OutsideRangePlugin config={uplotConfig} onChangeTimeRange={onChangeTimeRange} />
+                  <OutsideConfigPlugins
+                    config={uplotConfig}
+                    onChangeTimeRange={onChangeTimeRange}
+                    frames={frames}
+                    customScalesHandler={() => {
+                      if (panelRoot.current) {
+                        /**
+                         * setTriggerCoords
+                         */
+                        const { right, bottom } = panelRoot.current?.getBoundingClientRect();
+                        setTriggerCoords({ left: right / 2, top: bottom / 2 });
+                      }
+                      setAddingTimescale(true);
+                      getTimescales();
+                    }}
+                  />
                   {data.annotations && (
                     <ExemplarsPlugin
                       visibleSeries={getVisibleLabels(uplotConfig, frames)}
@@ -414,8 +432,8 @@ export const TimeSeriesPanel = ({
                   scales={scales}
                   style={{
                     position: 'absolute',
-                    left: timescaleTriggerCoords?.left,
-                    top: timescaleTriggerCoords?.top,
+                    left: triggerCoords?.left,
+                    top: triggerCoords?.top,
                   }}
                   timescalesFrame={timescalesFrame}
                 />
