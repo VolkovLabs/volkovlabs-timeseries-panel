@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.8.0 (2025-02-05)
+
+### Features / Enhancements
+
+- Added allow change/reset scales when out of range (#24)
+
 ## 1.7.0 (2025-01-31)
 
 ### Features / Enhancements
