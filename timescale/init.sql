@@ -30,7 +30,7 @@ CREATE TABLE config (
 );
 
 CREATE TABLE scales (
-    well text NOT NULL,
+    well text NULL,
     user_id integer NOT NULL,
     dashboard_id text NOT NULL,
     metric text NOT NULL,

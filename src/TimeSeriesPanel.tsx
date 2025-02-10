@@ -69,6 +69,7 @@ export const TimeSeriesPanel = ({
   const timezones = useMemo(() => getTimezones(options.timezone, timeZone), [options.timezone, timeZone]);
 
   const [timescalesFrame, setTimescalesFrame] = useState<DataFrame | null>(null);
+  const [globalTimescalesFrame, setGlobalTimescalesFrame] = useState<DataFrame | null>(null);
 
   const mappings = fieldConfig.defaults.mappings;
   let scales: string[] = [];
@@ -131,15 +132,57 @@ export const TimeSeriesPanel = ({
     setTimescalesFrame(null);
   }, [data.request?.targets, well, data.request?.dashboardUID]);
 
+  const getGlobalTimescales = useCallback(async () => {
+    const user = config.bootData.user;
+    const userId = user?.id;
+    const dashboardId = data.request?.dashboardUID;
+    const rawSql = `select min, max, metric from scales where user_id=${userId} and dashboard_id='${dashboardId}' and well='GLOBAL_SCALES';`;
+    const target = data.request?.targets[0];
+    const datasourceId = target?.datasource?.uid;
+    const refId = target?.refId;
+
+    if (refId) {
+      const response = await getBackendSrv().post('/api/ds/query', {
+        debug: true,
+        from: 'now-1h',
+        publicDashboardAccessToken: 'string',
+        queries: [
+          {
+            datasource: {
+              uid: datasourceId,
+            },
+            format: 'table',
+            intervalMs: 86400000,
+            maxDataPoints: 1092,
+            rawSql,
+            refId,
+          },
+        ],
+        to: 'now',
+      });
+
+      setGlobalTimescalesFrame(toDataFrame(response.results?.[refId]?.frames[0]));
+      return;
+    }
+
+    setGlobalTimescalesFrame(null);
+  }, [data.request?.targets, data.request?.dashboardUID]);
+
   const onUpsertTimescale = useCallback(
-    async (formData: TimescaleItem) => {
+    async (formData: TimescaleItem, isGlobal: boolean) => {
       const { min, max, description, scale, auto } = formData;
       const user = config.bootData.user;
       const userId = user?.id;
       const dashboardId = data.request?.dashboardUID;
       const sanitizedDescription = description.replace(/\"|\'/g, '');
-      const rawSql = `insert into scales (well, user_id, dashboard_id, metric, min, max, description) \
+      const rawSql = !isGlobal
+        ? `insert into scales (well, user_id, dashboard_id, metric, min, max, description) \
         values ('${well}', ${userId}, '${dashboardId}', '${scale}', ${auto ? null : min}, ${
+          auto ? null : max
+        }, '${sanitizedDescription}') on conflict (well, user_id, dashboard_id, metric) do \
+        update set min = excluded.min, max = excluded.max;`
+        : `insert into scales (well, user_id, dashboard_id, metric, min, max, description) \
+        values ('GLOBAL_SCALES', ${userId}, '${dashboardId}', '${scale}', ${auto ? null : min}, ${
           auto ? null : max
         }, '${sanitizedDescription}') on conflict (well, user_id, dashboard_id, metric) do \
         update set min = excluded.min, max = excluded.max;`;
@@ -166,12 +209,12 @@ export const TimeSeriesPanel = ({
         to: 'now',
       });
     },
-    [data.request?.targets, well, data.request?.dashboardUID]
+    [data.request?.dashboardUID, data.request?.targets, well]
   );
 
   const onUpsertTimescales = useCallback(
-    async (timescales: TimescaleItem[]) => {
-      await Promise.all(timescales.map((timescale) => onUpsertTimescale(timescale)));
+    async (timescales: TimescaleItem[], isGlobal: boolean) => {
+      await Promise.all(timescales.map((timescale) => onUpsertTimescale(timescale, isGlobal)));
 
       /**
        * Refresh Dashboard
@@ -182,8 +225,9 @@ export const TimeSeriesPanel = ({
        * Refresh timescales
        */
       await getTimescales();
+      await getGlobalTimescales();
     },
-    [getTimescales, onUpsertTimescale, dashboardRefresh]
+    [dashboardRefresh, getTimescales, getGlobalTimescales, onUpsertTimescale]
   );
 
   const suggestions = useMemo(() => {
@@ -350,6 +394,7 @@ export const TimeSeriesPanel = ({
                                 });
                                 setAddingTimescale(true);
                                 getTimescales();
+                                getGlobalTimescales();
                                 dismiss();
                               }}
                             >
@@ -436,6 +481,7 @@ export const TimeSeriesPanel = ({
                     top: triggerCoords?.top,
                   }}
                   timescalesFrame={timescalesFrame}
+                  globalTimescalesFrame={globalTimescalesFrame}
                 />
               )}
             </>
