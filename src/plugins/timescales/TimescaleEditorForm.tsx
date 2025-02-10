@@ -80,6 +80,11 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
      * Editable Table Data
      */
     const [editableTableData, setEditableTableData] = useState<TimescaleItem[]>([]);
+
+    /**
+     * Global Editable Table Data
+     * Global scales, well eq. "GLOBAL_SCALES"
+     */
     const [globalEditableTableData, setGlobalEditableTableData] = useState<TimescaleItem[]>([]);
 
     /**
@@ -118,94 +123,50 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
       }
     }, [appEvents, editableTableData, onSave, isGlobalScales, globalEditableTableData]);
 
-    /**
-     * Transform frame into editableTable Data
-     */
     useEffect(() => {
-      if (!timescalesFrame) {
-        return;
-      }
+      const processTimescales = (frame: DataFrame | null, setTableData: (data: TimescaleItem[]) => void) => {
+        if (!frame) {
+          return;
+        }
+
+        const metricValues = frame.fields.find((field) => field.name === 'metric')?.values || [];
+        const minValues = frame.fields.find((field) => field.name === 'min')?.values || [];
+        const maxValues = frame.fields.find((field) => field.name === 'max')?.values || [];
+
+        const scaleValuesMap: Map<string, { min: number; max: number }> = metricValues.reduce((acc, value, index) => {
+          acc.set(value, { min: minValues[index], max: maxValues[index] });
+          return acc;
+        }, new Map());
+
+        setTableData(
+          scales.map((scale) => {
+            const min = scaleValuesMap.get(scale)?.min;
+            const max = scaleValuesMap.get(scale)?.max;
+            const auto = min === null || max === null || (!min && !max);
+
+            return {
+              scale,
+              min: min ?? 0,
+              max: max ?? 0,
+              description: '',
+              auto,
+            };
+          })
+        );
+      };
 
       /**
-       * Scale Values from dataFrame
+       * Process Timescales
+       * Scales, based on well
        */
-      const metricValues = timescalesFrame.fields.find((field) => field.name === 'metric')?.values || [];
-      const minValues = timescalesFrame.fields.find((field) => field.name === 'min')?.values || [];
-      const maxValues = timescalesFrame.fields.find((field) => field.name === 'max')?.values || [];
+      processTimescales(timescalesFrame, setEditableTableData);
 
       /**
-       * Scale Values Map
+       * Process Timescales
+       * Global scales, well eq. "GLOBAL_SCALES"
        */
-      const scaleValuesMap: Map<string, { min: number; max: number }> = metricValues.reduce((acc, value, index) => {
-        acc.set(value, {
-          min: minValues[index],
-          max: maxValues[index],
-        });
-        return acc;
-      }, new Map());
-
-      /**
-       * Set Table Data
-       */
-      setEditableTableData(
-        scales.map((scale) => {
-          const min = scaleValuesMap.get(scale)?.min;
-          const max = scaleValuesMap.get(scale)?.max;
-          const auto = min === null || max === null || (!min && !max);
-
-          return {
-            scale,
-            min: min ?? 0,
-            max: max ?? 0,
-            description: '',
-            auto,
-          };
-        })
-      );
-    }, [timescalesFrame, scales]);
-
-    useEffect(() => {
-      if (!globalTimescalesFrame) {
-        return;
-      }
-
-      /**
-       * Scale Values from dataFrame
-       */
-      const metricValues = globalTimescalesFrame.fields.find((field) => field.name === 'metric')?.values || [];
-      const minValues = globalTimescalesFrame.fields.find((field) => field.name === 'min')?.values || [];
-      const maxValues = globalTimescalesFrame.fields.find((field) => field.name === 'max')?.values || [];
-
-      /**
-       * Scale Values Map
-       */
-      const scaleValuesMap: Map<string, { min: number; max: number }> = metricValues.reduce((acc, value, index) => {
-        acc.set(value, {
-          min: minValues[index],
-          max: maxValues[index],
-        });
-        return acc;
-      }, new Map());
-
-      /**
-       * Set Table Data
-       */
-      setGlobalEditableTableData(
-        scales.map((scale) => {
-          const min = scaleValuesMap.get(scale)?.min;
-          const max = scaleValuesMap.get(scale)?.max;
-          const auto = min === null || max === null || (!min && !max);
-
-          return {
-            scale,
-            min: min ?? 0,
-            max: max ?? 0,
-            description: '',
-            auto,
-          };
-        })
-      );
-    }, [timescalesFrame, scales, globalTimescalesFrame]);
+      processTimescales(globalTimescalesFrame, setGlobalEditableTableData);
+    }, [timescalesFrame, globalTimescalesFrame, scales]);
 
     /**
      * Editable Table Columns
