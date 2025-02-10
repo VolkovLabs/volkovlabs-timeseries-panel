@@ -81,8 +81,7 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
      */
     const [editableTableData, setEditableTableData] = useState<TimescaleItem[]>([]);
     const [globalEditableTableData, setGlobalEditableTableData] = useState<TimescaleItem[]>([]);
-    console.log('globalEditableTableData -> ', globalEditableTableData);
-    console.log('editableTableData -> ', editableTableData);
+
     /**
      * Events
      */
