@@ -24,8 +24,8 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
+  "id": 1,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "datasource": {
@@ -34,6 +34,12 @@
       },
       "fieldConfig": {
         "defaults": {
+          "custom": {
+            "thresholdsStyle": {
+              "mode": "color",
+              "thresholds": []
+            }
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -58,18 +64,44 @@
       },
       "id": 7,
       "options": {
+        "alwaysVisibleFilter": false,
         "autoScroll": false,
+        "collapsedByDefault": false,
+        "customValue": false,
         "displayMode": "table",
-        "favorites": false,
+        "emptyValue": false,
+        "favorites": {
+          "addQuery": {},
+          "datasource": "",
+          "deleteQuery": {},
+          "enabled": false,
+          "getQuery": {},
+          "storage": "browser"
+        },
         "filter": false,
         "groupSelection": false,
         "header": true,
+        "isUseLocalTime": false,
+        "minimizeOutputFormat": "text",
         "padding": 10,
+        "persistent": false,
+        "saveSelectedGroup": false,
+        "saveSelectedGroupKey": "",
+        "showGroupTotal": false,
+        "showLabel": false,
         "showName": false,
+        "showResetButton": false,
+        "showTotal": false,
         "statusSort": false,
         "sticky": false,
+        "tabsInOrder": true,
         "variable": "device"
       },
+      "targets": [
+        {
+          "refId": "A"
+        }
+      ],
       "title": "Panel Title",
       "type": "volkovlabs-variable-panel"
     },
@@ -84,6 +116,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -177,6 +210,7 @@
       },
       "id": 6,
       "options": {
+        "allowViewerAnnotation": true,
         "legend": {
           "calcs": [],
           "displayMode": "table",
@@ -280,12 +314,11 @@
       "title": "Test",
       "transformations": [
         {
-          "disabled": true,
           "id": "configFromData",
           "options": {
             "applyTo": {
               "id": "byName",
-              "options": "value"
+              "options": "temperature"
             },
             "configRefId": "B",
             "mappings": [
@@ -354,7 +387,6 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.0.3",
       "targets": [
         {
           "datasource": {
@@ -389,15 +421,14 @@
       "type": "table"
     }
   ],
+  "preload": false,
   "refresh": "",
-  "schemaVersion": 38,
-  "style": "dark",
+  "schemaVersion": 40,
   "tags": [],
   "templating": {
     "list": [
       {
         "current": {
-          "selected": false,
           "text": "device1",
           "value": "device1"
         },
@@ -406,26 +437,20 @@
           "uid": "timescale"
         },
         "definition": "select distinct name from metrics;",
-        "hide": 0,
         "includeAll": false,
         "label": "Device",
-        "multi": false,
         "name": "device",
         "options": [],
         "query": "select distinct name from metrics;",
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       },
       {
         "current": {
-          "selected": false,
           "text": "test",
           "value": "test"
         },
-        "hide": 0,
         "label": "Test",
         "name": "test",
         "options": [
@@ -436,7 +461,6 @@
           }
         ],
         "query": "test",
-        "skipUrlSync": false,
         "type": "textbox"
       }
     ]
@@ -449,6 +473,6 @@
   "timezone": "",
   "title": "Panels",
   "uid": "O4tc_E6Gz",
-  "version": 3,
+  "version": 1,
   "weekStart": ""
 }

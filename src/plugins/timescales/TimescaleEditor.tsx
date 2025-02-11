@@ -5,10 +5,11 @@ import { DataFrame } from '@grafana/data';
 import { TimescaleEditorForm, TimescaleItem } from './TimescaleEditorForm';
 
 interface TimescaleEditorProps extends HTMLAttributes<HTMLDivElement> {
-  onSave: (data: TimescaleItem[]) => void;
+  onSave: (data: TimescaleItem[], isGlobal: boolean) => void;
   onDismiss: () => void;
   scales: string[];
   timescalesFrame: DataFrame | null;
+  globalTimescalesFrame: DataFrame | null;
 }
 
 export const TimescaleEditor: React.FC<TimescaleEditorProps> = ({
@@ -17,6 +18,7 @@ export const TimescaleEditor: React.FC<TimescaleEditorProps> = ({
   scales,
   style,
   timescalesFrame,
+  globalTimescalesFrame,
 }) => {
   const [popperTrigger, setPopperTrigger] = useState<HTMLDivElement | null>(null);
   const [editorPopover, setEditorPopover] = useState<HTMLDivElement | null>(null);
@@ -45,6 +47,7 @@ export const TimescaleEditor: React.FC<TimescaleEditorProps> = ({
           ref={setEditorPopover}
           style={popper.styles.popper}
           timescalesFrame={timescalesFrame}
+          globalTimescalesFrame={globalTimescalesFrame}
           {...popper.attributes.popper}
         />
       </>

@@ -3,7 +3,7 @@ import useClickAway from 'react-use/lib/useClickAway';
 import { css, cx } from '@emotion/css';
 import { AlertErrorPayload, AlertPayload, AppEvents, DataFrame, GrafanaTheme2 } from '@grafana/data';
 import { getAppEvents } from '@grafana/runtime';
-import { Button, IconButton, Stack, useStyles2 } from '@grafana/ui';
+import { Button, IconButton, Stack, ToolbarButton, ToolbarButtonRow, useStyles2 } from '@grafana/ui';
 import { EditableTable } from './components';
 import { ColumnDef } from '@tanstack/react-table';
 
@@ -54,17 +54,23 @@ export interface TimescaleItem {
 }
 
 interface TimescaleEditorFormProps extends HTMLAttributes<HTMLDivElement> {
-  onSave: (data: TimescaleItem[]) => void;
+  onSave: (data: TimescaleItem[], isGlobal: boolean) => void;
   onDismiss: () => void;
   scales: string[];
   timescalesFrame: DataFrame | null;
+  globalTimescalesFrame: DataFrame | null;
 }
 
 export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEditorFormProps>(
-  ({ onSave, onDismiss, className, scales, timescalesFrame, ...otherProps }, ref) => {
+  ({ onSave, onDismiss, className, scales, timescalesFrame, globalTimescalesFrame, ...otherProps }, ref) => {
     const styles = useStyles2(getStyles);
     const clickAwayRef = useRef<HTMLDivElement>(null);
+
+    /**
+     * State
+     */
     const [isLoading, setIsLoading] = useState(false);
+    const [isGlobalScales, setIsGlobalScales] = useState(false);
     const [size, setSize] = useState({
       width: 0,
       height: 0,
@@ -74,6 +80,12 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
      * Editable Table Data
      */
     const [editableTableData, setEditableTableData] = useState<TimescaleItem[]>([]);
+
+    /**
+     * Global Editable Table Data
+     * Global scales, well eq. "GLOBAL_SCALES"
+     */
+    const [globalEditableTableData, setGlobalEditableTableData] = useState<TimescaleItem[]>([]);
 
     /**
      * Events
@@ -102,60 +114,59 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
 
       setIsLoading(true);
       try {
-        await onSave(editableTableData);
+        await onSave(isGlobalScales ? globalEditableTableData : editableTableData, isGlobalScales);
         notifySuccess(['Scales updated successfully.']);
         setIsLoading(false);
       } catch (error: any) {
         setIsLoading(false);
         notifyError(['Scales Error', error]);
       }
-    }, [appEvents, onSave, editableTableData]);
+    }, [appEvents, editableTableData, onSave, isGlobalScales, globalEditableTableData]);
 
-    /**
-     * Transform frame into editableTable Data
-     */
     useEffect(() => {
-      if (!timescalesFrame) {
-        return;
-      }
+      const processTimescales = (frame: DataFrame | null, setTableData: (data: TimescaleItem[]) => void) => {
+        if (!frame) {
+          return;
+        }
+
+        const metricValues = frame.fields.find((field) => field.name === 'metric')?.values || [];
+        const minValues = frame.fields.find((field) => field.name === 'min')?.values || [];
+        const maxValues = frame.fields.find((field) => field.name === 'max')?.values || [];
+
+        const scaleValuesMap: Map<string, { min: number; max: number }> = metricValues.reduce((acc, value, index) => {
+          acc.set(value, { min: minValues[index], max: maxValues[index] });
+          return acc;
+        }, new Map());
+
+        setTableData(
+          scales.map((scale) => {
+            const min = scaleValuesMap.get(scale)?.min;
+            const max = scaleValuesMap.get(scale)?.max;
+            const auto = min === null || max === null || (!min && !max);
+
+            return {
+              scale,
+              min: min ?? 0,
+              max: max ?? 0,
+              description: '',
+              auto,
+            };
+          })
+        );
+      };
 
       /**
-       * Scale Values from dataFrame
+       * Process Timescales
+       * Scales, based on well
        */
-      const metricValues = timescalesFrame.fields.find((field) => field.name === 'metric')?.values || [];
-      const minValues = timescalesFrame.fields.find((field) => field.name === 'min')?.values || [];
-      const maxValues = timescalesFrame.fields.find((field) => field.name === 'max')?.values || [];
+      processTimescales(timescalesFrame, setEditableTableData);
 
       /**
-       * Scale Values Map
+       * Process Timescales
+       * Global scales, well eq. "GLOBAL_SCALES"
        */
-      const scaleValuesMap: Map<string, { min: number; max: number }> = metricValues.reduce((acc, value, index) => {
-        acc.set(value, {
-          min: minValues[index],
-          max: maxValues[index],
-        });
-        return acc;
-      }, new Map());
-
-      /**
-       * Set Table Data
-       */
-      setEditableTableData(
-        scales.map((scale) => {
-          const min = scaleValuesMap.get(scale)?.min;
-          const max = scaleValuesMap.get(scale)?.max;
-          const auto = min === null || max === null || (!min && !max);
-
-          return {
-            scale,
-            min: min ?? 0,
-            max: max ?? 0,
-            description: '',
-            auto,
-          };
-        })
-      );
-    }, [timescalesFrame, scales]);
+      processTimescales(globalTimescalesFrame, setGlobalEditableTableData);
+    }, [timescalesFrame, globalTimescalesFrame, scales]);
 
     /**
      * Editable Table Columns
@@ -202,7 +213,25 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
             <IconButton name="times" aria-label="Close" onClick={onDismiss} />
           </Stack>
         </div>
-        {editableTableData && (
+        <ToolbarButtonRow alignment="left">
+          <ToolbarButton
+            variant={!isGlobalScales ? 'active' : 'default'}
+            onClick={() => {
+              setIsGlobalScales(false);
+            }}
+          >
+            Scales
+          </ToolbarButton>
+          <ToolbarButton
+            variant={isGlobalScales ? 'active' : 'default'}
+            onClick={() => {
+              setIsGlobalScales(true);
+            }}
+          >
+            Global Scales
+          </ToolbarButton>
+        </ToolbarButtonRow>
+        {!isGlobalScales && editableTableData && (
           <div className={styles.table} style={{ width: size.width, maxHeight: size.height }}>
             <EditableTable
               data={editableTableData}
@@ -234,20 +263,63 @@ export const TimescaleEditorForm = React.forwardRef<HTMLDivElement, TimescaleEdi
             />
           </div>
         )}
+        {isGlobalScales && globalEditableTableData && (
+          <div className={styles.table} style={{ width: size.width, maxHeight: size.height }}>
+            <EditableTable
+              data={globalEditableTableData}
+              columns={columns}
+              onUpdateData={(updatedRowIndex, updatedColumnId, value) => {
+                setGlobalEditableTableData((prev) => {
+                  return prev.map((row, rowIndex) => {
+                    if (rowIndex !== updatedRowIndex) {
+                      return row;
+                    }
+
+                    let normalizedValue = value;
+
+                    /**
+                     * Convert to number
+                     */
+                    if (updatedColumnId === 'min' || updatedColumnId === 'max') {
+                      const numberValue = Number(value);
+                      normalizedValue = Number.isNaN(numberValue) ? 0 : numberValue;
+                    }
+
+                    return {
+                      ...row,
+                      [updatedColumnId]: normalizedValue,
+                    };
+                  });
+                });
+              }}
+            />
+          </div>
+        )}
         <div className={styles.footer}>
           <Stack justifyContent={'flex-end'}>
             <Button
               size={'sm'}
               variant="secondary"
               onClick={() => {
-                setEditableTableData((prev) =>
-                  prev.map((scale) => ({
-                    ...scale,
-                    auto: true,
-                    min: 0,
-                    max: 0,
-                  }))
-                );
+                {
+                  isGlobalScales
+                    ? setGlobalEditableTableData((prev) =>
+                        prev.map((scale) => ({
+                          ...scale,
+                          auto: true,
+                          min: 0,
+                          max: 0,
+                        }))
+                      )
+                    : setEditableTableData((prev) =>
+                        prev.map((scale) => ({
+                          ...scale,
+                          auto: true,
+                          min: 0,
+                          max: 0,
+                        }))
+                      );
+                }
               }}
               fill="outline"
             >

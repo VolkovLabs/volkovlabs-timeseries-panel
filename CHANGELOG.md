@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.9.0 (2025-02-10)
+
+### Features / Enhancements
+
+- Add global value for scales (#26)
+
 ## 1.8.0 (2025-02-05)
 
 ### Features / Enhancements
