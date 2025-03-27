@@ -3,7 +3,7 @@
   "dependencies": {
     "@emotion/css": "^11.13.0",
     "@grafana/data": "^11.1.4",
-    "@grafana/runtime": "^11.1.4",
+    "@grafana/runtime": "^11.5.1",
     "@grafana/schema": "^11.1.4",
     "@grafana/ui": "^11.1.4",
     "@reduxjs/toolkit": "^2.2.7",
@@ -82,5 +82,5 @@
     "test:ci": "jest --maxWorkers 4 --coverage",
     "upgrade": "npm upgrade --save"
   },
-  "version": "1.9.0"
+  "version": "2.0.0"
 }
