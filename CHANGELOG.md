@@ -1,5 +1,24 @@
 # Change Log
 
+## 1.9.0 (2025-02-10)
+
+### Features / Enhancements
+
+- Add global value for scales (#26)
+
+## 1.8.0 (2025-02-05)
+
+### Features / Enhancements
+
+- Added allow change/reset scales when out of range (#24)
+
+## 1.7.0 (2025-01-31)
+
+### Features / Enhancements
+
+- Updated the position of the tooltip (#19)
+- Updated Custom Scales per dashboard (#20)
+
 ## 1.6.0 (2024-10-30)
 
 ### Features / Enhancements

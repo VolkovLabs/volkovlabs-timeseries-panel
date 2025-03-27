@@ -261,3 +261,19 @@ export const updateFrameSettings = (currentSettings: FieldSettings[] | undefined
 
   return [...currentSettings!, updatedField];
 };
+
+export const checkScaleLimits = (fieldValues: number[], min?: number | null, max?: number | null) => {
+  if (max !== undefined && max !== null) {
+    if (fieldValues.every((num) => num > max)) {
+      return true;
+    }
+  }
+
+  if (min !== undefined && min !== null) {
+    if (fieldValues.every((num) => num < min)) {
+      return true;
+    }
+  }
+
+  return false;
+};

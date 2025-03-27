@@ -32,11 +32,12 @@ CREATE TABLE config (
 CREATE TABLE scales (
     well text NOT NULL,
     user_id integer NOT NULL,
+    dashboard_id text NOT NULL,
     metric text NOT NULL,
     min DOUBLE PRECISION NULL,
     max DOUBLE PRECISION NULL,
     description text NOT NULL,
-    UNIQUE (well, user_id, metric)
+    UNIQUE (well, user_id, dashboard_id, metric)
 );
 
 CREATE SEQUENCE seq_metrics START 1;
