@@ -1,10 +1,16 @@
 # Change Log
 
+## 2.0.0 (2025-03-27)
+
+### Features / Enhancements
+
+- Added field settings per user (#21)
+
 ## 1.9.0 (2025-02-10)
 
 ### Features / Enhancements
 
-- Add global value for scales (#26)
+- Added global value for scales (#26)
 
 ## 1.8.0 (2025-02-05)
 
