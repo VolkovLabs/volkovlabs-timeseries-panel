@@ -15,18 +15,29 @@ import { applyNullInsertThreshold } from '@grafana/ui/src/components/GraphNG/nul
 import { nullToValue } from '@grafana/ui/src/components/GraphNG/nullToValue';
 import { FieldSettings } from 'app/types/frameSettings';
 import { FieldSettingItem } from 'plugins/frameSettings/FrameSettingsEditor';
+import { UserSettings } from 'app/types/userSettings';
+
+interface PropsOptions {
+  series: DataFrame[];
+  theme: GrafanaTheme2;
+  fieldSettings: FieldSettings[];
+  timeRange?: TimeRange;
+  // numeric X requires a single frame where the first field is numeric
+  xNumFieldIdx?: number;
+  userSettings: UserSettings;
+}
 
 /**
  * Returns null if there are no graphable fields
  */
-export function prepareGraphableFields(
-  series: DataFrame[],
-  theme: GrafanaTheme2,
-  fieldSettings: FieldSettings[],
-  timeRange?: TimeRange,
-  // numeric X requires a single frame where the first field is numeric
-  xNumFieldIdx?: number
-): DataFrame[] | null {
+export function prepareGraphableFields({
+  series,
+  theme,
+  fieldSettings,
+  timeRange,
+  xNumFieldIdx,
+  userSettings,
+}: PropsOptions): DataFrame[] | null {
   if (!series?.length) {
     return null;
   }
@@ -155,8 +166,7 @@ export function prepareGraphableFields(
     /**
      * Apply user settings from user storage
      */
-    applyUserSettingsForFrame(frames, fieldSettings);
-
+    applyUserSettingsForFrame(frames, fieldSettings, userSettings);
     return frames;
   }
 
@@ -182,7 +192,7 @@ const setClassicPaletteIdxs = (frames: DataFrame[], theme: GrafanaTheme2, skipFi
 /**
  * applyUserSettingsForFrame
  */
-const applyUserSettingsForFrame = (frames: DataFrame[], fieldSettings: FieldSettings[]) => {
+const applyUserSettingsForFrame = (frames: DataFrame[], fieldSettings: FieldSettings[], userSettings: UserSettings) => {
   frames.forEach((frame) => {
     frame.fields.forEach((field) => {
       const existedField = fieldSettings.find((item) => item.refId === frame.refId && item.name === field.name);
@@ -195,6 +205,13 @@ const applyUserSettingsForFrame = (frames: DataFrame[], fieldSettings: FieldSett
            */
           viz: existedField.visibility,
           legend: existedField.visibility,
+        };
+      }
+
+      if (!!userSettings.scaleDistribution?.type) {
+        field.config.custom.scaleDistribution = {
+          ...field.config.custom.scaleDistribution,
+          ...userSettings.scaleDistribution,
         };
       }
     });
