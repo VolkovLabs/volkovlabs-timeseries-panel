@@ -1,5 +1,6 @@
 import {
   DataFrame,
+  DisplayValue,
   Field,
   FieldType,
   getDisplayProcessor,
@@ -15,6 +16,8 @@ import { applyNullInsertThreshold } from '@grafana/ui/src/components/GraphNG/nul
 import { nullToValue } from '@grafana/ui/src/components/GraphNG/nullToValue';
 import { FieldSettings } from 'app/types/frameSettings';
 import { FieldSettingItem } from 'plugins/frameSettings/FrameSettingsEditor';
+import { saveAs } from 'file-saver';
+import { utils, write } from 'xlsx';
 
 /**
  * Returns null if there are no graphable fields
@@ -276,4 +279,71 @@ export const checkScaleLimits = (fieldValues: number[], min?: number | null, max
   }
 
   return false;
+};
+
+/**
+ * Apply display value
+ * @param value
+ */
+export const applyDisplayValue = (value: DisplayValue) => {
+  return value.suffix ? `${value.text}${value.suffix}` : value.text;
+};
+
+/**
+ * Transform data to download
+ * @param dataFrames
+ */
+export const transformDataToDownload = (dataFrames?: DataFrame[]): unknown[][] => {
+  if (!dataFrames || !dataFrames.length) {
+    return [];
+  }
+
+  const fields = dataFrames[0].fields;
+
+  /**
+   * Table headers
+   */
+  const headers = fields.map((field) => field.name);
+
+  const rowCount = Math.max(...fields.map((field) => field.values.length));
+
+  const rows = Array.from({ length: rowCount }, (_, rowIndex) =>
+    fields.map((field) => {
+      const value = field.values[rowIndex];
+      if (value === undefined) {
+        return null;
+      }
+      return field.display ? applyDisplayValue(field.display(value)) : value;
+    })
+  );
+
+  return [headers, ...rows];
+};
+
+/**
+ * Download Xlsx
+ * @param content
+ * @param fileName
+ * @param tableName
+ */
+export const downloadXlsx = (content: unknown[][], fileName = 'download', tableName?: string) => {
+  const ws = utils.aoa_to_sheet(content);
+  const wb = utils.book_new();
+
+  /**
+   * tableName use for sheet name
+   * substring needs here https://support.microsoft.com/en-us/office/rename-a-worksheet-3f1f7148-ee83-404d-8ef0-9ff99fbad1f9
+   * Worksheet names cannot: Contain more than 31 characters.
+   */
+  const sheetName = (tableName ?? 'Sheet1').substring(0, 31);
+
+  utils.book_append_sheet(wb, ws, sheetName);
+
+  const blob = write(wb, { bookType: 'xlsx', type: 'array' });
+
+  const fileData = new Blob([blob], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+  });
+
+  return saveAs(fileData, `${fileName}.xlsx`);
 };
