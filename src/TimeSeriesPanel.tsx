@@ -537,7 +537,7 @@ export const TimeSeriesPanel = ({
                                 dismiss();
                               }}
                             >
-                              Download excel
+                              Download .xlsx
                             </Button>
                             <Button
                               icon="channel-add"
