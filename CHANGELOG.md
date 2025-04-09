@@ -4,7 +4,8 @@
 
 ### Features / Enhancements
 
-- Added the functionality to download an Excel file #27
+- Added the functionality to download an Excel file (#27)
+- Added Linear Log scale settings (#28)
 
 ## 2.0.0 (2025-03-27)
 
