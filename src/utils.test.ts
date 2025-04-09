@@ -30,7 +30,12 @@ describe('utils', () => {
           ],
         }),
       ];
-      const frames = prepareGraphableFields(input, createTheme(), fieldSettingsDefault);
+      const frames = prepareGraphableFields({
+        series: input,
+        theme: createTheme(),
+        fieldSettings: fieldSettingsDefault,
+        userSettings: {},
+      });
       expect(frames).toBeNull();
     });
 
@@ -43,7 +48,12 @@ describe('utils', () => {
           ],
         }),
       ];
-      const frames = prepareGraphableFields(input, createTheme(), fieldSettingsDefault);
+      const frames = prepareGraphableFields({
+        series: input,
+        theme: createTheme(),
+        fieldSettings: fieldSettingsDefault,
+        userSettings: {},
+      });
       expect(frames).toBeNull();
     });
 
@@ -59,7 +69,12 @@ describe('utils', () => {
           ],
         }),
       ];
-      const frames = prepareGraphableFields(input, createTheme(), fieldSettingsDefault);
+      const frames = prepareGraphableFields({
+        series: input,
+        theme: createTheme(),
+        fieldSettings: fieldSettingsDefault,
+        userSettings: {},
+      });
       expect(frames![0].fields.map((f) => f.state?.seriesIndex)).toEqual([undefined, undefined, 0, undefined, 1]);
     });
 
@@ -74,7 +89,12 @@ describe('utils', () => {
           ],
         }),
       ];
-      const frames = prepareGraphableFields(input, createTheme(), fieldSettingsDefault);
+      const frames = prepareGraphableFields({
+        series: input,
+        theme: createTheme(),
+        fieldSettings: fieldSettingsDefault,
+        userSettings: {},
+      });
       const out = frames![0];
 
       expect(out.fields.map((f) => f.name)).toEqual(['a', 'b', 'c', 'd']);
@@ -100,7 +120,12 @@ describe('utils', () => {
           { name: 'a', values: [-10, NaN, 10, -Infinity, +Infinity] },
         ],
       });
-      const frames = prepareGraphableFields([df], createTheme(), fieldSettingsDefault);
+      const frames = prepareGraphableFields({
+        series: [df],
+        theme: createTheme(),
+        fieldSettings: fieldSettingsDefault,
+        userSettings: {},
+      });
 
       const field = frames![0].fields.find((f) => f.name === 'a');
       expect(field!.values).toMatchInlineSnapshot(`
@@ -122,7 +147,12 @@ describe('utils', () => {
         ],
       });
 
-      const frames = prepareGraphableFields([df], createTheme(), fieldSettingsDefault);
+      const frames = prepareGraphableFields({
+        series: [df],
+        theme: createTheme(),
+        fieldSettings: fieldSettingsDefault,
+        userSettings: {},
+      });
 
       const field = frames![0].fields.find((f) => f.name === 'a');
       expect(field!.values).toMatchInlineSnapshot(`
@@ -146,7 +176,12 @@ describe('utils', () => {
           { name: 'a', config: { noValue: '20' }, values: [1, 2, 3] },
         ],
       });
-      const frames = prepareGraphableFields([df], createTheme(), fieldSettingsDefault);
+      const frames = prepareGraphableFields({
+        series: [df],
+        theme: createTheme(),
+        fieldSettings: fieldSettingsDefault,
+        userSettings: {},
+      });
 
       const field = frames![0].fields.find((f) => f.name === 'a');
       expect(field!.values).toMatchInlineSnapshot(`

@@ -18,6 +18,7 @@ import { useDashboardRefresh } from '@volkovlabs/components';
 import { TimeSeries } from 'app/core/components/TimeSeries/TimeSeries';
 import { FrameSettingsEditor } from 'plugins/frameSettings/FrameSettingsEditor';
 import { FieldSettings } from 'app/types/frameSettings';
+import { UserSettings } from 'app/types/userSettings';
 import { Options } from './panelcfg.gen';
 import { ExemplarsPlugin, getVisibleLabels } from './plugins/ExemplarsPlugin';
 import { ThresholdControlsPlugin } from './plugins/ThresholdControlsPlugin';
@@ -32,10 +33,12 @@ import { AnnotationsPlugin2 } from './plugins/AnnotationsPlugin2';
 import { PinnedTooltip } from 'app/core/components/PinnedTooltip/PinnedTooltip';
 import { PinnedPoint } from 'app/types';
 import { OutsideConfigPlugins } from 'plugins/OutsideConfigPlugins';
+import { ScaleSettingsEditor } from 'plugins/scaleSettings/ScaleSettingsEditor';
 
 interface TimeSeriesPanelProps extends PanelProps<Options> {}
 
 const USER_FIELD_SETTINGS_KEY = 'volkovlabs.TimeSeriesPanel.fieldSettings';
+const USER_SETTINGS_KEY = 'volkovlabs.TimeSeriesPanel.userSettings';
 
 const getPinnedPointKey = (dataIdxs: Array<number | null>, seriesIdx: number | null): string => {
   return `${seriesIdx}-${dataIdxs.join('-')}`;
@@ -71,8 +74,10 @@ export const TimeSeriesPanel = ({
    */
   const [isAddingTimescale, setAddingTimescale] = useState(false);
   const [fieldSettings, setFieldSettings] = useState<FieldSettings[]>([]);
+  const [userSettings, setUserSettings] = useState<UserSettings>({});
   const [showFrameSettings, setShowFrameSettings] = useState(false);
   const [triggerCoords, setTriggerCoords] = useState<{ left: number; top: number } | null>(null);
+  const [scaleSettings, setScaleSettings] = useState(false);
 
   /**
    * Transformed data use for download.Series joined by time
@@ -93,6 +98,17 @@ export const TimeSeriesPanel = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    storage.getItem(USER_SETTINGS_KEY).then((value: string | null) => {
+      setUserSettings(value ? JSON.parse(value) : {});
+    });
+
+    /**
+     * Load once
+     */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const panelRoot = useRef<HTMLDivElement>(null);
 
   /**
@@ -102,8 +118,15 @@ export const TimeSeriesPanel = ({
 
   const isVerticallyOriented = options.orientation === VizOrientation.Vertical;
   const frames = useMemo(
-    () => prepareGraphableFields(data.series, config.theme2, fieldSettings, timeRange),
-    [data.series, fieldSettings, timeRange]
+    () =>
+      prepareGraphableFields({
+        series: data.series,
+        theme: config.theme2,
+        fieldSettings: fieldSettings,
+        timeRange: timeRange,
+        userSettings: userSettings,
+      }),
+    [data.series, fieldSettings, timeRange, userSettings]
   );
 
   const isAllFieldsHidden = useMemo(() => {
@@ -564,6 +587,9 @@ export const TimeSeriesPanel = ({
                               icon="chart-line"
                               variant="secondary"
                               size="sm"
+                              style={{
+                                marginBottom: '8px',
+                              }}
                               id="frame-settings"
                               onClick={() => {
                                 setTriggerCoords({
@@ -575,6 +601,22 @@ export const TimeSeriesPanel = ({
                               }}
                             >
                               Frame settings
+                            </Button>
+                            <Button
+                              icon="gf-interpolation-linear"
+                              variant="secondary"
+                              size="sm"
+                              id="frame-settings"
+                              onClick={() => {
+                                setTriggerCoords({
+                                  left: u.rect.left + (u.cursor.left ?? 0),
+                                  top: u.rect.top + (u.cursor.top ?? 0),
+                                });
+                                setScaleSettings(true);
+                                dismiss();
+                              }}
+                            >
+                              Linear/Logarithmic settings
                             </Button>
                           </div>
                         }
@@ -659,6 +701,21 @@ export const TimeSeriesPanel = ({
                   }}
                   timescalesFrame={timescalesFrame}
                   globalTimescalesFrame={globalTimescalesFrame}
+                />
+              )}
+              {scaleSettings && (
+                <ScaleSettingsEditor
+                  style={{
+                    position: 'absolute',
+                    left: triggerCoords?.left,
+                    top: triggerCoords?.top,
+                  }}
+                  onSave={(settings: UserSettings) => {
+                    setUserSettings(settings);
+                    storage.setItem(USER_SETTINGS_KEY, JSON.stringify(settings));
+                  }}
+                  onDismiss={() => setScaleSettings(false)}
+                  userSettings={userSettings}
                 />
               )}
               {showFrameSettings && (
