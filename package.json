@@ -9,6 +9,7 @@
     "@reduxjs/toolkit": "^2.2.7",
     "@tanstack/react-table": "^8.20.1",
     "@volkovlabs/components": "^3.5.0",
+    "file-saver": "^2.0.5",
     "logfmt": "^1.4.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -16,7 +17,8 @@
     "react-popper": "^2.3.0",
     "stream": "^0.0.3",
     "tinycolor2": "^1.6.0",
-    "tslib": "^2.6.3"
+    "tslib": "^2.6.3",
+    "xlsx": "^0.18.5"
   },
   "description": "Time Series panel for Grafana",
   "devDependencies": {
@@ -30,6 +32,7 @@
     "@swc/jest": "^0.2.36",
     "@testing-library/jest-dom": "6.4.8",
     "@testing-library/react": "16.0.0",
+    "@types/file-saver": "^2.0.7",
     "@types/jest": "^29.5.12",
     "@types/lodash": "^4.17.7",
     "@types/logfmt": "^1.2.6",
