@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.1.0 (2025-04-09)
+
+### Features / Enhancements
+
+- Added the functionality to download an Excel file #27
+
 ## 2.0.0 (2025-03-27)
 
 ### Features / Enhancements
