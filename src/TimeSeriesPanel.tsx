@@ -4,9 +4,11 @@ import {
   DashboardCursorSync,
   DataFrame,
   DataFrameType,
+  dateTimeFormat,
   FieldType,
   PanelProps,
   toDataFrame,
+  transformDataFrame,
   VizOrientation,
 } from '@grafana/data';
 import { getBackendSrv, PanelDataErrorView, TimeRangeUpdatedEvent, usePluginUserStorage } from '@grafana/runtime';
@@ -24,7 +26,7 @@ import { TimescaleEditor } from './plugins/timescales/TimescaleEditor';
 import { TimescaleItem } from './plugins/timescales/TimescaleEditorForm';
 import { getPrepareTimeseriesSuggestion } from './suggestions';
 import { useRuntimeVariables } from './hooks';
-import { getTimezones, prepareGraphableFields } from './utils';
+import { downloadXlsx, getTimezones, prepareGraphableFields, transformDataToDownload } from './utils';
 import { TimeRange2, TooltipHoverMode } from '@grafana/ui/src/components/uPlot/plugins/TooltipPlugin2';
 import { TimeSeriesTooltip } from './TimeSeriesTooltip';
 import { AnnotationsPlugin2 } from './plugins/AnnotationsPlugin2';
@@ -46,6 +48,7 @@ export const TimeSeriesPanel = ({
   data,
   timeRange,
   timeZone,
+  title,
   width,
   height,
   options,
@@ -75,6 +78,12 @@ export const TimeSeriesPanel = ({
   const [showFrameSettings, setShowFrameSettings] = useState(false);
   const [triggerCoords, setTriggerCoords] = useState<{ left: number; top: number } | null>(null);
   const [scaleSettings, setScaleSettings] = useState(false);
+
+  /**
+   * Transformed data use for download.Series joined by time
+   *
+   */
+  const [transformedDataFrame, setTransformedDataFrame] = useState<DataFrame[]>();
 
   const storage = usePluginUserStorage();
 
@@ -179,6 +188,23 @@ export const TimeSeriesPanel = ({
   ) {
     well = Array.isArray(wellVariable.current.value) ? wellVariable.current.value[0] : wellVariable.current.value;
   }
+
+  useEffect(() => {
+    /**
+     * Transformed data use for download.Series joined by time
+     * Return frame like joined-a-b-c-d series
+     */
+    const subscription = transformDataFrame(
+      [{ id: 'joinByField', options: { byField: undefined } }],
+      data.series
+    ).subscribe((result) => {
+      setTransformedDataFrame(result);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [data]);
 
   /**
    * Get timescales
@@ -335,6 +361,14 @@ export const TimeSeriesPanel = ({
     },
     [dashboardRefresh, getTimescales, well, onUpsertTimescale]
   );
+
+  /**
+   * Download excel file
+   */
+  const downloadExcel = useCallback(() => {
+    const contentData = transformDataToDownload(transformedDataFrame);
+    downloadXlsx(contentData, `${title}${dateTimeFormat(new Date())}`, title);
+  }, [title, transformedDataFrame]);
 
   const suggestions = useMemo(() => {
     if (frames?.length && frames.every((df) => df.meta?.type === DataFrameType.TimeSeriesLong)) {
@@ -513,6 +547,21 @@ export const TimeSeriesPanel = ({
                               flexDirection: 'column',
                             }}
                           >
+                            <Button
+                              icon="file-download"
+                              variant="secondary"
+                              size="sm"
+                              style={{
+                                marginBottom: '8px',
+                              }}
+                              id="download-excel"
+                              onClick={() => {
+                                downloadExcel();
+                                dismiss();
+                              }}
+                            >
+                              Download Excel data
+                            </Button>
                             <Button
                               icon="channel-add"
                               variant="secondary"

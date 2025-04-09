@@ -1,6 +1,21 @@
-import { createTheme, FieldType, toDataFrame } from '@grafana/data';
-import { checkScaleLimits, prepareGraphableFields } from './utils';
+import { saveAs } from 'file-saver';
+
+import { createTheme, DisplayValue, FieldType, toDataFrame } from '@grafana/data';
+import {
+  applyDisplayValue,
+  checkScaleLimits,
+  downloadXlsx,
+  prepareGraphableFields,
+  transformDataToDownload,
+} from './utils';
 import { FieldSettings } from 'app/types/frameSettings';
+
+/**
+ * file-saver mock
+ */
+jest.mock('file-saver', () => ({
+  saveAs: jest.fn(),
+}));
 
 describe('utils', () => {
   describe('prepare timeseries graph', () => {
@@ -205,6 +220,141 @@ describe('utils', () => {
     it('Should return true if the array contains a single value outside the limits', () => {
       expect(checkScaleLimits([15], null, 10)).toEqual(true);
       expect(checkScaleLimits([2], 5, null)).toEqual(true);
+    });
+  });
+
+  /**
+   * downloadXlsx
+   */
+  describe('downloadXlsx', () => {
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('Should create a xls file with the correct name and content', () => {
+      const content = [
+        ['Header1', 'Header2'],
+        ['Data1', 'Data2'],
+      ];
+      const fileName = 'devices';
+      downloadXlsx(content, fileName);
+
+      expect(saveAs).toHaveBeenCalledTimes(1);
+      expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), `${fileName}.xlsx`);
+    });
+
+    it('Should use default file name "download" if no fileName is provided', () => {
+      const content = [
+        ['Header1', 'Header2'],
+        ['Data1', 'Data2'],
+      ];
+
+      downloadXlsx(content);
+
+      expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), 'download.xlsx');
+    });
+  });
+
+  /**
+   * applyDisplayValue
+   */
+  describe('applyDisplayValue', () => {
+    it('Should return text with suffix if suffix is provided', () => {
+      const value = { text: '123', suffix: 'ms' } as any;
+      expect(applyDisplayValue(value)).toEqual('123ms');
+    });
+
+    it('Should return only text if suffix is not provided', () => {
+      const value = { text: '456' } as any;
+      expect(applyDisplayValue(value)).toEqual('456');
+    });
+
+    it('Should handle empty string suffix correctly', () => {
+      const value = { text: '789', suffix: '' } as any;
+      expect(applyDisplayValue(value)).toEqual('789');
+    });
+
+    it('Should handle numeric text and suffix', () => {
+      const value = { text: 100, suffix: '%' } as any;
+      expect(applyDisplayValue(value)).toEqual('100%');
+    });
+
+    it('Should handle undefined suffix explicitly', () => {
+      const value = { text: 'test', suffix: undefined } as any;
+      expect(applyDisplayValue(value)).toEqual('test');
+    });
+  });
+
+  /**
+   * transformDataToDownload
+   */
+  describe('transformDataToDownload', () => {
+    it('Should return empty array if dataFrames is undefined', () => {
+      expect(transformDataToDownload(undefined)).toEqual([]);
+    });
+
+    it('Should return empty array if dataFrames is empty', () => {
+      expect(transformDataToDownload([])).toEqual([]);
+    });
+
+    it('Should return only headers if no values are present', () => {
+      const dataFrames = [
+        {
+          fields: [
+            { name: 'Time', values: [] },
+            { name: 'Temp', values: [] },
+          ],
+        },
+      ];
+      expect(transformDataToDownload(dataFrames as any)).toEqual([['Time', 'Temp']]);
+    });
+
+    it('Should return correct table with raw values and undefined as null', () => {
+      const dataFrames = [
+        {
+          fields: [
+            { name: 'A', values: [1, 2, undefined] },
+            { name: 'B', values: [4, undefined, 6] },
+          ],
+        },
+      ];
+      expect(transformDataToDownload(dataFrames as any)).toEqual([
+        ['A', 'B'],
+        [1, 4],
+        [2, null],
+        [null, 6],
+      ]);
+    });
+
+    it('Should apply display function if provided', () => {
+      const mockDisplay = (value: any): DisplayValue => ({
+        text: `val-${value}`,
+        suffix: 'u',
+        numeric: value,
+      });
+
+      const dataFrames = [
+        {
+          fields: [
+            {
+              name: 'X',
+              values: [10, 20],
+              display: mockDisplay,
+            },
+            {
+              name: 'Y',
+              values: [30, 40],
+              display: mockDisplay,
+            },
+          ],
+        },
+      ];
+
+      expect(transformDataToDownload(dataFrames as any)).toEqual([
+        ['X', 'Y'],
+        ['val-10u', 'val-30u'],
+        ['val-20u', 'val-40u'],
+      ]);
     });
   });
 });
