@@ -600,13 +600,13 @@ export const TimeSeriesPanel = ({
                                 dismiss();
                               }}
                             >
-                              Frame settings
+                              Variable settings
                             </Button>
                             <Button
                               icon="gf-interpolation-linear"
                               variant="secondary"
                               size="sm"
-                              id="frame-settings"
+                              id="variable-settings"
                               onClick={() => {
                                 setTriggerCoords({
                                   left: u.rect.left + (u.cursor.left ?? 0),
