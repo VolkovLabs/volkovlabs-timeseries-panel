@@ -13,7 +13,7 @@ import {
 } from '@grafana/data';
 import { getBackendSrv, PanelDataErrorView, TimeRangeUpdatedEvent, usePluginUserStorage } from '@grafana/runtime';
 import { TooltipDisplayMode } from '@grafana/schema';
-import { Button, EventBusPlugin, KeyboardPlugin, TooltipPlugin2, usePanelContext } from '@grafana/ui';
+import { Button, EventBusPlugin, KeyboardPlugin, usePanelContext } from '@grafana/ui';
 import { useDashboardRefresh } from '@volkovlabs/components';
 import { TimeSeries } from 'app/core/components/TimeSeries/TimeSeries';
 import { FrameSettingsEditor } from 'plugins/frameSettings/FrameSettingsEditor';
@@ -34,6 +34,7 @@ import { PinnedTooltip } from 'app/core/components/PinnedTooltip/PinnedTooltip';
 import { PinnedPoint } from 'app/types';
 import { OutsideConfigPlugins } from 'plugins/OutsideConfigPlugins';
 import { ScaleSettingsEditor } from 'plugins/scaleSettings/ScaleSettingsEditor';
+import { TooltipPlugin2 } from 'plugins/tooltipPlugin2/TooltipPlugin2';
 
 interface TimeSeriesPanelProps extends PanelProps<Options> {}
 
@@ -480,7 +481,7 @@ export const TimeSeriesPanel = ({
                       dismiss();
                       return;
                     }
-
+                    console.log('isPinned isPinned isPinned isPinned isPinned  >>>> ', isPinned);
                     const annotate = () => {
                       const xVal = u.posToVal(u.cursor.left!, 'x');
 
