@@ -13,7 +13,7 @@ import {
 } from '@grafana/data';
 import { getBackendSrv, PanelDataErrorView, TimeRangeUpdatedEvent, usePluginUserStorage } from '@grafana/runtime';
 import { TooltipDisplayMode } from '@grafana/schema';
-import { Button, EventBusPlugin, KeyboardPlugin, TooltipPlugin2, usePanelContext } from '@grafana/ui';
+import { Button, EventBusPlugin, KeyboardPlugin, usePanelContext } from '@grafana/ui';
 import { useDashboardRefresh } from '@volkovlabs/components';
 import { TimeSeries } from 'app/core/components/TimeSeries/TimeSeries';
 import { FrameSettingsEditor } from 'plugins/frameSettings/FrameSettingsEditor';
@@ -34,6 +34,7 @@ import { PinnedTooltip } from 'app/core/components/PinnedTooltip/PinnedTooltip';
 import { PinnedPoint } from 'app/types';
 import { OutsideConfigPlugins } from 'plugins/OutsideConfigPlugins';
 import { ScaleSettingsEditor } from 'plugins/scaleSettings/ScaleSettingsEditor';
+import { TooltipPlugin2 } from 'plugins/tooltipPlugin2/TooltipPlugin2';
 
 interface TimeSeriesPanelProps extends PanelProps<Options> {}
 
@@ -480,7 +481,6 @@ export const TimeSeriesPanel = ({
                       dismiss();
                       return;
                     }
-
                     const annotate = () => {
                       const xVal = u.posToVal(u.cursor.left!, 'x');
 
@@ -600,13 +600,16 @@ export const TimeSeriesPanel = ({
                                 dismiss();
                               }}
                             >
-                              Frame settings
+                              Variable settings
                             </Button>
                             <Button
-                              icon="gf-interpolation-linear"
+                              icon="layers-alt"
                               variant="secondary"
                               size="sm"
-                              id="frame-settings"
+                              style={{
+                                marginBottom: '8px',
+                              }}
+                              id="variable-settings"
                               onClick={() => {
                                 setTriggerCoords({
                                   left: u.rect.left + (u.cursor.left ?? 0),
