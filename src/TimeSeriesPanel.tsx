@@ -603,9 +603,12 @@ export const TimeSeriesPanel = ({
                               Variable settings
                             </Button>
                             <Button
-                              icon="gf-interpolation-linear"
+                              icon="layers-alt"
                               variant="secondary"
                               size="sm"
+                              style={{
+                                marginBottom: '8px',
+                              }}
                               id="variable-settings"
                               onClick={() => {
                                 setTriggerCoords({

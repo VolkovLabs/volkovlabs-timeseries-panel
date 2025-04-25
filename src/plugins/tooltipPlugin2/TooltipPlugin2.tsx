@@ -784,7 +784,7 @@ export const TooltipPlugin2 = ({
             scheduleRender(true);
           }, 0);
         }
-      }, 450)
+      }, 350)
     );
 
     const onscroll = (e: Event) => {
