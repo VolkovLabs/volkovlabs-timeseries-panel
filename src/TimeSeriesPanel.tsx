@@ -481,7 +481,6 @@ export const TimeSeriesPanel = ({
                       dismiss();
                       return;
                     }
-                    console.log('isPinned isPinned isPinned isPinned isPinned  >>>> ', isPinned);
                     const annotate = () => {
                       const xVal = u.posToVal(u.cursor.left!, 'x');
 
