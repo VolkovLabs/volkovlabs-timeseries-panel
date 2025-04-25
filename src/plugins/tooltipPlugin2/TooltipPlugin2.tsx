@@ -753,8 +753,8 @@ export const TooltipPlugin2 = ({
               }
             }
 
-            const shiftX = clientX + (offsetX === 0 ? TOOLTIP_OFFSET : -TOOLTIP_OFFSET) - 55;
-            const shiftY = clientY + (offsetY === 0 ? TOOLTIP_OFFSET : -TOOLTIP_OFFSET) - 35;
+            const shiftX = clientX + (offsetX === 0 ? TOOLTIP_OFFSET : -TOOLTIP_OFFSET) - 50;
+            const shiftY = clientY + (offsetY === 0 ? TOOLTIP_OFFSET : -TOOLTIP_OFFSET) - 30;
 
             const reflectX = offsetX === 0 ? '' : 'translateX(-100%)';
             const reflectY = offsetY === 0 ? '' : 'translateY(-100%)';
@@ -766,7 +766,7 @@ export const TooltipPlugin2 = ({
 
             if (domRef.current != null) {
               domRef.current.style.transform = transform;
-              domRef.current.style.padding = '25px';
+              domRef.current.style.padding = '20px';
 
               /**
                * Uncomment this line to see the boundary of the frozen area
@@ -784,7 +784,7 @@ export const TooltipPlugin2 = ({
             scheduleRender(true);
           }, 0);
         }
-      }, 550)
+      }, 450)
     );
 
     const onscroll = (e: Event) => {
