@@ -35,6 +35,7 @@ import { PinnedPoint } from 'app/types';
 import { OutsideConfigPlugins } from 'plugins/OutsideConfigPlugins';
 import { ScaleSettingsEditor } from 'plugins/scaleSettings/ScaleSettingsEditor';
 import { TooltipPlugin2 } from 'plugins/tooltipPlugin2/TooltipPlugin2';
+import { CloseButton } from 'app/core/components/CloseButton/CloseButton';
 
 interface TimeSeriesPanelProps extends PanelProps<Options> {}
 
@@ -475,6 +476,7 @@ export const TimeSeriesPanel = ({
                   clientZoom={true}
                   syncMode={cursorSync}
                   syncScope={eventsScope}
+                  maxWidth={options.tooltip.maxWidth}
                   render={(u, dataIdxs, seriesIdx, isPinned = false, dismiss, timeRange2, viaSync) => {
                     if (enableAnnotationCreation && timeRange2 != null) {
                       setNewAnnotationRange(timeRange2);
@@ -501,6 +503,7 @@ export const TimeSeriesPanel = ({
                         isPinned={isPinned}
                         annotate={enableAnnotationCreation ? annotate : undefined}
                         maxHeight={options.tooltip.maxHeight}
+                        panelElement={panelRoot.current}
                         headerContent={
                           <div>
                             {isPinnedPointExists ? (
@@ -538,6 +541,7 @@ export const TimeSeriesPanel = ({
                                 variant="secondary"
                               />
                             )}
+                            <CloseButton onClick={dismiss} />
                           </div>
                         }
                         footerContent={
@@ -626,7 +630,6 @@ export const TimeSeriesPanel = ({
                       />
                     );
                   }}
-                  maxWidth={options.tooltip.maxWidth}
                 />
               )}
               {panelRoot.current &&
