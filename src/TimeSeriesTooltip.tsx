@@ -105,7 +105,6 @@ export const TimeSeriesTooltip = ({
           el.style.bottom = `unset`;
         }
 
-        console.log('POSITION CHANGED FINISH');
         el.style.borderColor = 'blue';
       }
 
