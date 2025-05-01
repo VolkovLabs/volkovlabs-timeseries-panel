@@ -104,8 +104,6 @@ export const TimeSeriesTooltip = ({
           el.style.top = `unset`;
           el.style.bottom = `unset`;
         }
-
-        el.style.borderColor = 'blue';
       }
 
       /**

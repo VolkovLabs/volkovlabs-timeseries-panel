@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, useRef, useState } from 'react';
+import React, { HTMLAttributes, useEffect, useRef, useState } from 'react';
 import { usePopper } from 'react-popper';
 import {
   IconButton,
@@ -70,35 +70,64 @@ export const ScaleSettingsEditor: React.FC<ScaleSettingsEditorProps> = ({ onDism
   /**
    * State
    */
-  const [popperTrigger, setPopperTrigger] = useState<HTMLDivElement | null>(null);
-  const [editorPopover, setEditorPopover] = useState<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(userSettings.scaleDistribution?.type || 'linear');
   const [log, setLog] = useState(userSettings.scaleDistribution?.log || 2);
 
   const clickAwayRef = useRef<HTMLDivElement>(null);
+  const wrapEditorRef = useRef<HTMLDivElement>(null);
 
-  useClickAway(clickAwayRef, () => {
+  useClickAway(wrapEditorRef, () => {
     onDismiss();
   });
 
-  const popper = usePopper(popperTrigger, editorPopover, {
-    modifiers: [
-      { name: 'arrow', enabled: false },
-      {
-        name: 'preventOverflow',
-        enabled: true,
-        options: {
-          rootBoundary: 'viewport',
-        },
-      },
-    ],
-  });
+  useEffect(() => {
+    const el = wrapEditorRef.current;
+    if (!el) {
+      return;
+    }
+
+    let frameId: number;
+
+    const checkPosition = () => {
+      const rect = el.getBoundingClientRect();
+      /**
+       * Checks
+       */
+      const isPanelOutOfBottomView = rect.bottom > window.innerHeight;
+      const isPanelOutOfRightView = rect.right > window.innerWidth;
+
+      if (isPanelOutOfBottomView) {
+        const offset = rect.bottom - window.innerHeight;
+        /**
+         * 50px gap near bottom
+         */
+        const updatedTop = rect.top - offset - 50;
+        el.style.top = `${updatedTop}px`;
+      }
+
+      if (isPanelOutOfRightView) {
+        const offsetRight = rect.right - window.innerWidth;
+        /**
+         * 50px gap near bottom
+         */
+        const updatedLeft = rect.left - offsetRight - 50;
+        el.style.left = `${updatedLeft}px`;
+      }
+
+      frameId = requestAnimationFrame(checkPosition);
+    };
+
+    checkPosition();
+
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
+  }, []);
 
   return (
     <Portal>
       <>
-        <div ref={setPopperTrigger} style={style} />
-        <div ref={setEditorPopover} style={popper.styles.popper} {...popper.attributes.popper}>
+        <div ref={wrapEditorRef} style={style}>
           <div className={styles.editor} ref={clickAwayRef}>
             <div className={styles.header}>
               <Stack justifyContent={'space-between'} alignItems={'center'}>
