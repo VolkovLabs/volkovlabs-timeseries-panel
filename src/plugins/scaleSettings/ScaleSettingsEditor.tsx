@@ -1,5 +1,4 @@
 import React, { HTMLAttributes, useEffect, useRef, useState } from 'react';
-import { usePopper } from 'react-popper';
 import {
   IconButton,
   InlineField,

@@ -212,7 +212,7 @@ export const FrameSettingsEditor: React.FC<FrameSettingsEditorProps> = ({
     <Portal>
       <>
         <div ref={wrapEditorRef} style={style}>
-          <div className={styles.editor} ref={clickAwayRef} style={{ border: '1px solid blue' }}>
+          <div className={styles.editor} ref={clickAwayRef}>
             <div className={styles.header}>
               <Stack justifyContent={'space-between'} alignItems={'center'}>
                 <div className={styles.title}>Set Frame settings</div>

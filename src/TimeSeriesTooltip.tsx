@@ -245,7 +245,6 @@ export const getStyles = (theme: GrafanaTheme2) => ({
   wrapper: css({
     display: 'flex',
     flexDirection: 'column',
-    border: '2px solid yellow',
   }),
   footerContent: css({
     borderTop: `1px solid ${theme.colors.border.medium}`,

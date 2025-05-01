@@ -1,9 +1,7 @@
 import React, { HTMLAttributes, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useClickAway from 'react-use/lib/useClickAway';
-import { usePopper } from 'react-popper';
 import { Button, IconButton, Portal, Stack, ToolbarButton, ToolbarButtonRow, useStyles2 } from '@grafana/ui';
 import { AlertErrorPayload, AlertPayload, AppEvents, DataFrame, GrafanaTheme2 } from '@grafana/data';
-import { TimescaleEditorForm, TimescaleItem } from './TimescaleEditorForm';
 import { css, cx } from '@emotion/css';
 import { getAppEvents } from '@grafana/runtime';
 import { ColumnDef } from '@tanstack/react-table';
@@ -14,6 +12,46 @@ import { EditableTable } from './components';
  */
 const MaxRows = 10;
 const RowHeight = 40.5;
+
+/**
+ * Timescale Item
+ */
+export interface TimescaleItem {
+  /**
+   * Scale
+   *
+   * @type {string}
+   */
+  scale: string;
+
+  /**
+   * Min
+   *
+   * @type {number}
+   */
+  min: number | null;
+
+  /**
+   * Max
+   *
+   * @type {number}
+   */
+  max: number | null;
+
+  /**
+   * Description
+   *
+   * @type {string}
+   */
+  description: string;
+
+  /**
+   * Auto
+   *
+   * @type {boolean}
+   */
+  auto: boolean;
+}
 
 interface TimescaleEditorProps extends HTMLAttributes<HTMLDivElement> {
   onSave: (data: TimescaleItem[], isGlobal: boolean) => void;
