@@ -368,8 +368,8 @@ export const TimeSeriesPanel = ({
    */
   const downloadExcel = useCallback(() => {
     const contentData = transformDataToDownload(transformedDataFrame);
-    downloadXlsx(contentData, `${title}${dateTimeFormat(new Date())}`, title);
-  }, [title, transformedDataFrame]);
+    downloadXlsx(contentData, `${replaceVariables(title)}${dateTimeFormat(new Date())}`, replaceVariables(title));
+  }, [replaceVariables, title, transformedDataFrame]);
 
   const suggestions = useMemo(() => {
     if (frames?.length && frames.every((df) => df.meta?.type === DataFrameType.TimeSeriesLong)) {
