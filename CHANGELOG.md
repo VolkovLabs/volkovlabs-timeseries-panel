@@ -6,6 +6,7 @@
 
 - Added menu display when hovering over or near a point (#29)
 - Added replace variables to document name and table name (#31)
+- Updated position for pop up and pinned menu (#30)
 
 ## 2.1.0 (2025-04-09)
 
