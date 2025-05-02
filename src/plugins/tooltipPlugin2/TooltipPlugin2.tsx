@@ -70,6 +70,11 @@ interface TooltipPlugin2Props {
     dataLinks: LinkModel[]
   ) => React.ReactNode;
 
+  /**
+   * Show close button
+   */
+  showCloseButton?: boolean;
+
   maxWidth?: number;
 }
 
@@ -138,6 +143,7 @@ export const TooltipPlugin2 = ({
   syncMode = DashboardCursorSync.Off,
   syncScope = 'global', // eventsScope
   getDataLinks = getDataLinksFallback,
+  showCloseButton = false,
 }: TooltipPlugin2Props) => {
   const domRef = useRef<HTMLDivElement>(null);
   const portalRoot = useRef<HTMLElement | null>(null);
@@ -870,7 +876,7 @@ export const TooltipPlugin2 = ({
         aria-atomic="true"
       >
         <div className={cx(styles.content, isPinned && styles.pinned)}>
-          {isPinned && <CloseButton onClick={dismiss} />}
+          {isPinned && showCloseButton && <CloseButton onClick={dismiss} />}
           {contents}
         </div>
       </div>,
