@@ -1,5 +1,12 @@
 # Change Log
 
+## 2.2.0 (2025-05-01)
+
+### Features / Enhancements
+
+- Added menu display when hovering over or near a point (#29)
+- Added replace variables to document name and table name (#31)
+
 ## 2.1.0 (2025-04-09)
 
 ### Features / Enhancements
